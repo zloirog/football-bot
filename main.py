@@ -22,7 +22,7 @@ async def is_chat_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return True
     else:
         await update.message.reply_text('Вася, гуляй! Only admins of the chat can call this function.')
-        return True
+        return False
 
 async def start(context: CallbackContext):
     job_data = context.job.data
@@ -152,15 +152,35 @@ def main():
     callback_mapping = {
         'register': register,
         'register_plus_one': register_plus_one,
-        'quit': remove,
+        'quit_confirm': remove,
         'refresh_message': refresh_message,
-        'remove_plus_one': remove_plus_one
+        'remove_plus_one_confirm': remove_plus_one
     }
 
     async def callback_query_handler(update: Update, context: CallbackContext) -> None:
         query = update.callback_query
         # Get the callback data
         data = query.data
+        if data == 'quit':
+            keyboard = [
+                [InlineKeyboardButton("Yes, confirm quit", callback_data='quit_confirm')],
+                [InlineKeyboardButton("No, cancel", callback_data='cancel')],
+            ]
+            confirm_reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_reply_markup(reply_markup=confirm_reply_markup)
+        
+        if data == 'remove_plus_one':
+            keyboard = [
+                [InlineKeyboardButton("Yes, confirm quit for  ➕ 1️⃣", callback_data='remove_plus_one_confirm')],
+                [InlineKeyboardButton("No, cancel", callback_data='cancel')],
+            ]
+            confirm_reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_reply_markup(reply_markup=confirm_reply_markup)
+            
+        if data == 'cancel':
+            await query.edit_message_reply_markup(reply_markup=reply_markup)
+            
+            
         # Call the corresponding function
         if data in callback_mapping:
            await callback_mapping[data](update, context)
