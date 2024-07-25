@@ -1,9 +1,12 @@
 import json
-import datetime
 import os
+from datetime import datetime, timedelta
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, CallbackContext
+from match_files import load_data, save_data, ban_player
+from constants import MAX_PLAYERS, PRIORITY_HOURS, DATA_FILE, LAST_MATCH_FILE, CHAT_ID, reply_markup
+from utils import get_message
 
 async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = load_data()
@@ -15,8 +18,22 @@ async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.callback_query.from_user.username
     query = update.callback_query
 
-
     is_game_full = len(game['players']) == MAX_PLAYERS
+    
+    format_str = '%Y-%m-%dT%H:%M:%S'
+    datetime_parsed = datetime.strptime(game['datetime'], format_str)
+    
+    datetime_now = datetime.now()
+
+    time_delta = datetime_parsed - datetime_now
+    
+    hours_difference = time_delta.total_seconds() / 3600
+        
+    if hours_difference < 22:
+        two_weeks = timedelta(weeks=2)
+        banned_until = datetime_parsed + two_weeks
+        ban_player(user, banned_until.isoformat())
+        await context.bot.send_message(chat_id=CHAT_ID, text=f"@{user} в бан нах! You are banned until {banned_until}")
 
     for list_name in ["players", "waiting_list"]:
         for player in game[list_name]:
@@ -30,8 +47,9 @@ async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         await query.edit_message_text(text=get_message(), reply_markup=reply_markup, parse_mode=ParseMode.HTML)
-    except:
-        print("No update")
+    except Exception as error:
+        print("No update", error)
+        return
 
 async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = load_data()
@@ -59,6 +77,7 @@ async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(text=get_message(), reply_markup=reply_markup, parse_mode=ParseMode.HTML)
     except:
         print("No update")
+        return
 
 async def remove_other(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await is_chat_admin(update, context):

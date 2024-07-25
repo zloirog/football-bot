@@ -4,7 +4,30 @@ import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, CallbackContext
+from match_files import load_data, save_data, load_bans_file
+from constants import MAX_PLAYERS, PRIORITY_HOURS, DATA_FILE, LAST_MATCH_FILE, CHAT_ID, reply_markup
+from utils import get_message
 
+def is_player_banned(player): 
+    data = load_bans_file()
+    current_datetime = datetime.datetime.now().isoformat()
+    
+    for user in data:
+        user_date = datetime.datetime.fromisoformat(user['until'])
+        
+        if user['name'] == player and datetime.datetime.fromisoformat(current_datetime) < user_date:
+            return True
+    
+    return False
+
+def was_in_last_match(player):
+    last_match = load_last_match()
+    res = False
+    for playerObj in last_match:
+        if playerObj["name"] == player:
+            res = True
+
+    return res
 
 async def register_old(update: Update, context: CallbackContext):
     data = load_data()
@@ -22,9 +45,11 @@ async def register_old(update: Update, context: CallbackContext):
     confirmed = True
     priority = 3
 
-
     if not user:
         user = update.message.from_user.id
+        
+    if is_player_banned(user):
+        await context.bot.send_message(chat_id=CHAT_ID, text=f"@{user} сорри братиш, ты в бане!")
 
     can_user_register_val = can_user_register(user, game["players"] + game['waiting_list'])
 
@@ -120,6 +145,10 @@ async def register(update: Update, context: CallbackContext):
     if not user:
         user = update.callback_query.from_user.first_name
 
+    if is_player_banned(user):
+        await context.bot.send_message(chat_id=CHAT_ID, text=f"@{user} сорри братиш, ты в бане!")
+        return
+
     can_user_register_val = can_user_register(user, game["players"] + game['waiting_list'])
 
     # if len(context.args) == 0:
@@ -166,8 +195,9 @@ async def register(update: Update, context: CallbackContext):
 
     try:
         await query.edit_message_text(text=get_message(), reply_markup=reply_markup, parse_mode=ParseMode.HTML)
-    except:
-        print("No update")
+    except Exception as error:
+        print("No update", error)
+        return
 
 async def register_plus_one(update: Update, context: CallbackContext):
     data = load_data()
@@ -239,3 +269,18 @@ async def register_plus_one(update: Update, context: CallbackContext):
         await query.edit_message_text(text=get_message(), reply_markup=reply_markup, parse_mode=ParseMode.HTML)
     except:
         print("No update")
+        return
+
+
+def can_user_register(player, players):
+    himself = True
+    from_chat = True
+    plus_one = True
+    for obj in players:
+        if obj['name'] == player and obj['registered_by'] == player:
+            himself = False
+        if obj['name'] != player and obj['registered_by'] == player:
+            from_chat = False
+        if obj['registered_by'] == player and obj['is_plus'] == True:
+            plus_one = False
+    return {"himself": himself, "from_chat": from_chat, "plus_one": plus_one}

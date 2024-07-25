@@ -1,5 +1,10 @@
-import os
 import json
+import datetime
+import os
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.constants import ParseMode
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, CallbackContext
+from constants import MAX_PLAYERS, PRIORITY_HOURS, DATA_FILE, LAST_MATCH_FILE, BAN_FILE
 
 # Load data
 def load_data():
@@ -27,3 +32,17 @@ async def save_last_match(update: Update, context: ContextTypes.DEFAULT_TYPE):
     game = data[game_id]
     with open(LAST_MATCH_FILE, 'w') as file:
         json.dump(game["players"], file, indent=4)
+        
+def load_bans_file():
+    if os.path.exists(BAN_FILE):
+        with open(BAN_FILE, 'r') as file:
+            return json.load(file)
+    return []
+
+def ban_player(who, until_when):
+    data = load_bans_file()
+    new_object = {'name': who, 'until': until_when}
+    data.append(new_object)
+    with open(BAN_FILE, 'w') as file:
+        json.dump(data, file, indent=4)
+    
