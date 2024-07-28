@@ -5,6 +5,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, CallbackContext
 from constants import MAX_PLAYERS, PRIORITY_HOURS, DATA_FILE, LAST_MATCH_FILE, BAN_FILE
+from utils import is_chat_admin
 
 # Load data
 def load_data():

@@ -30,3 +30,15 @@ def registered():
             message += f"{idx + 1}. @{player['name']} (Priority {player['priority']})\n"
 
     return message
+
+async def is_chat_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    user_id = update.effective_user.id
+
+    # Check if the user is an admin
+    chat_member = await context.bot.get_chat_member(chat_id, user_id)
+    if chat_member["status"] == "administrator":
+        return True
+    else:
+        await update.message.reply_text('Вася, гуляй! Only admins of the chat can call this function.')
+        return False

@@ -4,6 +4,7 @@ import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, CallbackContext
+from utils import is_chat_admin
 
 async def get_jobs(update: Update, context: CallbackContext):
     jobs = context.job_queue.jobs()

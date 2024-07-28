@@ -10,19 +10,9 @@ from register_funcs import register, register_old, register_plus_one, can_user_r
 from remove_funcs import remove, remove_plus_one, remove_other
 from jobs_funcs import get_jobs, start_repeating_job, stop_repeating_job
 from constants import MAX_PLAYERS, PRIORITY_HOURS, DATA_FILE, LAST_MATCH_FILE, CHAT_ID, reply_markup
-from utils import get_message
+from utils import get_message, is_chat_admin
 
-async def is_chat_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    user_id = update.effective_user.id
 
-    # Check if the user is an admin
-    chat_member = await context.bot.get_chat_member(chat_id, user_id)
-    if chat_member["status"] == "administrator":
-        return True
-    else:
-        await update.message.reply_text('Вася, гуляй! Only admins of the chat can call this function.')
-        return False
 
 async def start(context: CallbackContext):
     job_data = context.job.data

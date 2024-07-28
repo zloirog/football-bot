@@ -6,7 +6,7 @@ from telegram.constants import ParseMode
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, CallbackContext
 from match_files import load_data, save_data, ban_player
 from constants import MAX_PLAYERS, PRIORITY_HOURS, DATA_FILE, LAST_MATCH_FILE, CHAT_ID, reply_markup
-from utils import get_message
+from utils import get_message, is_chat_admin 
 
 async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = load_data()
