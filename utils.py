@@ -1,3 +1,5 @@
+from telegram import Update
+from telegram.ext import ContextTypes
 from date_utils import next_saturday
 from match_files import load_data
 
@@ -8,9 +10,9 @@ def get_message():
     return message
 
 
+
 def registered():
     data = load_data()
-
     game_id = list(data.keys())[-1]
     game = data[game_id]
 

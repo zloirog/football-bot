@@ -12,32 +12,6 @@ from jobs_funcs import get_jobs, start_repeating_job, stop_repeating_job
 from constants import MAX_PLAYERS, PRIORITY_HOURS, DATA_FILE, LAST_MATCH_FILE, CHAT_ID, reply_markup
 from utils import get_message, is_chat_admin
 
-
-
-async def start(context: CallbackContext):
-    job_data = context.job.data
-    chat_id = job_data['chat_id']
-    game_date = next_saturday()
-    game_id = game_date.strftime("%d.%m.%Y_%H_%M")
-    game_time_frmt = game_date.strftime("%d.%m.%Y %H:%M")
-
-    data = load_data()
-    if game_id in data:
-        await context.bot.send_message(chat_id=chat_id, text="Game already exists!")
-        return
-
-    data[game_id] = {
-        "datetime": game_date.isoformat(),
-        "players": [],
-        "waiting_list": [],
-        "start_time": datetime.datetime.now().isoformat(),
-        "message": ""
-    }
-    save_data(data)
-
-    sent_message = await context.bot.send_message(chat_id=chat_id, text=f"Registration opened! \n{game_time_frmt}", reply_markup=reply_markup)
-    await context.bot.pin_chat_message(chat_id=chat_id, message_id=sent_message.message_id)
-
 async def show_registration_message(update: Update, context: CallbackContext):
     if not await is_chat_admin(update, context):
         return
@@ -67,27 +41,6 @@ async def confirm(update: Update, context:ContextTypes.DEFAULT_TYPE):
                 return
 
     await update.message.reply_text(f"{user}, buddy, you don't need to confirm anything.")
-
-async def check_for_confimation(context:ContextTypes.DEFAULT_TYPE):
-    job_data = context.job.data
-    chat_id = job_data['chat_id']
-    name = job_data['name']
-
-    data = load_data()
-    if not data:
-        await context.bot.send_message(chat_id=chat_id, text="No games available.")
-        return
-
-    game_id = list(data.keys())[-1]
-    game = data[game_id]
-
-    for list_name in ["players", "waiting_list"]:
-        for idx, player in enumerate(game[list_name]):
-            if player['name'] == name and player['confirmed'] == False:
-                game[list_name].remove(player)
-                save_data(data)
-                await context.bot.send_message(chat_id=chat_id, text=f"@{name} did not confirmed his registration!")
-                return
 
 async def last_match(update: Update, context: ContextTypes.DEFAULT_TYPE):
     last_match_players = load_last_match()

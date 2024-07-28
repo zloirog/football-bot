@@ -1,24 +1,45 @@
-import json
 import datetime
-import os
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update
 from telegram.constants import ParseMode
-from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, CallbackContext
+from telegram.ext import CallbackContext, ContextTypes
 from match_files import load_data, save_data, load_bans_file
-from constants import MAX_PLAYERS, PRIORITY_HOURS, DATA_FILE, LAST_MATCH_FILE, CHAT_ID, reply_markup
+from constants import MAX_PLAYERS, PRIORITY_HOURS, CHAT_ID, reply_markup
 from utils import get_message
+from match_files import load_last_match
 
-def is_player_banned(player): 
+def is_player_banned(player):
     data = load_bans_file()
     current_datetime = datetime.datetime.now().isoformat()
-    
+
     for user in data:
         user_date = datetime.datetime.fromisoformat(user['until'])
-        
+
         if user['name'] == player and datetime.datetime.fromisoformat(current_datetime) < user_date:
             return True
-    
+
     return False
+
+async def check_for_confimation(context:ContextTypes.DEFAULT_TYPE):
+    job_data = context.job.data
+    chat_id = job_data['chat_id']
+    name = job_data['name']
+
+    data = load_data()
+    if not data:
+        await context.bot.send_message(chat_id=chat_id, text="No games available.")
+        return
+
+    game_id = list(data.keys())[-1]
+    game = data[game_id]
+
+    for list_name in ["players", "waiting_list"]:
+        for idx, player in enumerate(game[list_name]):
+            if player['name'] == name and player['confirmed'] == False:
+                game[list_name].remove(player)
+                save_data(data)
+                await context.bot.send_message(chat_id=chat_id, text=f"@{name} did not confirmed his registration!")
+                return
+
 
 def was_in_last_match(player):
     last_match = load_last_match()
@@ -47,7 +68,7 @@ async def register_old(update: Update, context: CallbackContext):
 
     if not user:
         user = update.message.from_user.id
-        
+
     if is_player_banned(user):
         await context.bot.send_message(chat_id=CHAT_ID, text=f"@{user} сорри братиш, ты в бане!")
 
