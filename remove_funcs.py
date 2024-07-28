@@ -2,9 +2,11 @@ from datetime import datetime, timedelta
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
-from match_files import load_data, save_data, ban_player
 from constants import MAX_PLAYERS, CHAT_ID, reply_markup
-from utils import get_message, is_chat_admin 
+from utils import is_chat_admin
+from register_funcs import get_message
+from match_files import load_data, save_data, ban_player
+
 
 async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = load_data()
@@ -17,16 +19,16 @@ async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
 
     is_game_full = len(game['players']) == MAX_PLAYERS
-    
+
     format_str = '%Y-%m-%dT%H:%M:%S'
     datetime_parsed = datetime.strptime(game['datetime'], format_str)
-    
+
     datetime_now = datetime.now()
 
     time_delta = datetime_parsed - datetime_now
-    
+
     hours_difference = time_delta.total_seconds() / 3600
-        
+
     if hours_difference < 22:
         two_weeks = timedelta(weeks=2)
         banned_until = datetime_parsed + two_weeks
@@ -49,6 +51,7 @@ async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print("No update", error)
         return
 
+
 async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = load_data()
     if not data:
@@ -58,7 +61,6 @@ async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
     game = data[game_id]
     user = update.callback_query.from_user.username
     query = update.callback_query
-
 
     is_game_full = len(game['players']) == MAX_PLAYERS
 
@@ -77,6 +79,7 @@ async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print("No update")
         return
 
+
 async def remove_other(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await is_chat_admin(update, context):
         return
@@ -91,8 +94,8 @@ async def remove_other(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) == 1 and context.args[0].startswith('@'):
         user = context.args[0][1:]
     else:
-         await update.message.reply_text("user is not provided.")
-         return
+        await update.message.reply_text("user is not provided.")
+        return
 
     for list_name in ["players", "waiting_list"]:
         for player in game[list_name]:

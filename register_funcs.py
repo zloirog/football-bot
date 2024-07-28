@@ -4,8 +4,16 @@ from telegram.constants import ParseMode
 from telegram.ext import CallbackContext, ContextTypes
 from match_files import load_data, save_data, load_bans_file
 from constants import MAX_PLAYERS, PRIORITY_HOURS, CHAT_ID, reply_markup
-from utils import get_message
 from match_files import load_last_match
+from date_utils import next_saturday
+
+
+def get_message():
+    game_date = next_saturday()
+    game_time_frmt = game_date.strftime("%d.%m.%Y %H:%M")
+    message = f"Registration opened! \n{game_time_frmt}\n\n" + registered()
+    return message
+
 
 def is_player_banned(player):
     data = load_bans_file()
@@ -19,7 +27,8 @@ def is_player_banned(player):
 
     return False
 
-async def check_for_confimation(context:ContextTypes.DEFAULT_TYPE):
+
+async def check_for_confimation(context: ContextTypes.DEFAULT_TYPE):
     job_data = context.job.data
     chat_id = job_data['chat_id']
     name = job_data['name']
@@ -50,6 +59,7 @@ def was_in_last_match(player):
 
     return res
 
+
 async def register_old(update: Update, context: CallbackContext):
     data = load_data()
     if not data:
@@ -72,7 +82,8 @@ async def register_old(update: Update, context: CallbackContext):
     if is_player_banned(user):
         await context.bot.send_message(chat_id=CHAT_ID, text=f"@{user} сорри братиш, ты в бане!")
 
-    can_user_register_val = can_user_register(user, game["players"] + game['waiting_list'])
+    can_user_register_val = can_user_register(
+        user, game["players"] + game['waiting_list'])
 
     if len(context.args) == 0:
         player = user
@@ -102,7 +113,8 @@ async def register_old(update: Update, context: CallbackContext):
 
             confirmed = False
             job_data = {'name': player, 'chat_id': chat_id}
-            context.job_queue.run_once(check_for_confimation, 14400, data=job_data)
+            context.job_queue.run_once(
+                check_for_confimation, 14400, data=job_data)
             priority = 2 if priority > 2 else priority
     else:
         await update.message.reply_text("Invalid promt. User @ to tag player or type +1")
@@ -126,7 +138,6 @@ async def register_old(update: Update, context: CallbackContext):
     else:
         sorted_players = sorted(game["players"], key=lambda x: x['priority'])
 
-
         insert_index = None
         for i, item in enumerate(sorted_players):
             if item["priority"] > player_entry["priority"]:
@@ -144,12 +155,12 @@ async def register_old(update: Update, context: CallbackContext):
     save_data(data)
     await update.message.reply_text(f"{player} registered successfully.")
 
+
 async def register(update: Update, context: CallbackContext):
     data = load_data()
     if not data:
         await update.message.reply_text("No games available. Start a new game with /start")
         return
-
 
     chat_id = update.effective_chat.id
     game_id = list(data.keys())[-1]
@@ -170,7 +181,8 @@ async def register(update: Update, context: CallbackContext):
         await context.bot.send_message(chat_id=CHAT_ID, text=f"@{user} сорри братиш, ты в бане!")
         return
 
-    can_user_register_val = can_user_register(user, game["players"] + game['waiting_list'])
+    can_user_register_val = can_user_register(
+        user, game["players"] + game['waiting_list'])
 
     # if len(context.args) == 0:
     player = user
@@ -220,6 +232,7 @@ async def register(update: Update, context: CallbackContext):
         print("No update", error)
         return
 
+
 async def register_plus_one(update: Update, context: CallbackContext):
     data = load_data()
     if not data:
@@ -241,7 +254,8 @@ async def register_plus_one(update: Update, context: CallbackContext):
     if not user:
         user = update.callback_query.from_user.first_name
 
-    can_user_register_val = can_user_register(user, game["players"] + game['waiting_list'])
+    can_user_register_val = can_user_register(
+        user, game["players"] + game['waiting_list'])
 
     # if len(context.args) == 0:
     player = user + " +1"
@@ -267,7 +281,6 @@ async def register_plus_one(update: Update, context: CallbackContext):
         game["players"] = sorted(game["players"], key=lambda x: x['priority'])
     else:
         sorted_players = sorted(game["players"], key=lambda x: x['priority'])
-
 
         insert_index = None
         for i, item in enumerate(sorted_players):
@@ -305,3 +318,48 @@ def can_user_register(player, players):
         if obj['registered_by'] == player and obj['is_plus'] == True:
             plus_one = False
     return {"himself": himself, "from_chat": from_chat, "plus_one": plus_one}
+
+def registered():
+    data = load_data()
+    game_id = list(data.keys())[-1]
+    game = data[game_id]
+
+    players = sorted(game["players"], key=lambda x: x['priority'])
+    waiting_list = sorted(game["waiting_list"], key=lambda x: x['priority'])
+
+    message = "<b>Registered Players:</b>\n"
+    for idx, player in enumerate(players):
+        message += f"{idx + 1}. @{player['name']} (Priority {player['priority']})"
+        if not player['confirmed']:
+            message += "Not confirmed"
+        message += "\n"
+
+    if waiting_list:
+        message += "\n<b>Waiting List:</b>\n"
+        for idx, player in enumerate(waiting_list):
+            message += f"{idx + 1}. @{player['name']} (Priority {player['priority']})\n"
+
+    return message
+
+
+async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    data = load_data()
+    if not data:
+        await update.message.reply_text("No games available.")
+        return
+
+    game_id = list(data.keys())[-1]
+    game = data[game_id]
+    user = update.message.from_user.username
+
+    for list_name in ["players", "waiting_list"]:
+        for idx, player in enumerate(game[list_name]):
+            if player['name'] == user and player['confirmed'] == False:
+                player['confirmed'] = True
+                save_data(data)
+                await update.message.reply_text(f"{user} confirmed his registration.")
+                await query.edit_message_text(text=get_message(), reply_markup=reply_markup, parse_mode=ParseMode.HTML)
+                return
+
+    await update.message.reply_text(f"{user}, buddy, you don't need to confirm anything.")
+
