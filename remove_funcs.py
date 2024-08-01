@@ -3,7 +3,7 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 from constants import MAX_PLAYERS, CHAT_ID, reply_markup
-from utils import is_chat_admin
+from utils import is_chat_admin, get_hours_until_match
 from register_funcs import get_message
 from match_files import load_data, save_data, ban_player
 
@@ -23,11 +23,7 @@ async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
     format_str = '%Y-%m-%dT%H:%M:%S'
     datetime_parsed = datetime.strptime(game['datetime'], format_str)
 
-    datetime_now = datetime.now()
-
-    time_delta = datetime_parsed - datetime_now
-
-    hours_difference = time_delta.total_seconds() / 3600
+    hours_difference = get_hours_until_match(datetime_parsed)
 
     if hours_difference < 22:
         two_weeks = timedelta(weeks=2)
@@ -91,6 +87,9 @@ async def remove_other(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     game_id = list(data.keys())[-1]
     game = data[game_id]
+
+    is_game_full = len(game['players']) == MAX_PLAYERS
+
     if len(context.args) == 1 and context.args[0].startswith('@'):
         user = context.args[0][1:]
     else:
@@ -101,6 +100,10 @@ async def remove_other(update: Update, context: ContextTypes.DEFAULT_TYPE):
         for player in game[list_name]:
             if player['name'] == user:
                 game[list_name].remove(player)
+                if is_game_full and list_name == "players":
+                    game["players"].append(game['waiting_list'][0])
+                    del game['waiting_list'][0]
+
                 save_data(data)
                 await update.message.reply_text(f"{user} removed successfully.")
                 return

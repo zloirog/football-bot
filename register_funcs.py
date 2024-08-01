@@ -6,6 +6,7 @@ from match_files import load_data, save_data, load_bans_file
 from constants import MAX_PLAYERS, PRIORITY_HOURS, CHAT_ID, reply_markup
 from match_files import load_last_match
 from date_utils import next_saturday
+from utils import get_hours_until_match
 
 
 def get_message():
@@ -162,7 +163,6 @@ async def register(update: Update, context: CallbackContext):
         await update.message.reply_text("No games available. Start a new game with /start")
         return
 
-    chat_id = update.effective_chat.id
     game_id = list(data.keys())[-1]
     game = data[game_id]
     user = update.callback_query.from_user.username
@@ -188,7 +188,18 @@ async def register(update: Update, context: CallbackContext):
     player = user
     if (now - start_time).total_seconds() / 3600 < PRIORITY_HOURS and was_in_last_match(player):
         priority = 1
-    priority = 2 if priority > 2 else priority
+
+    format_str = '%Y-%m-%dT%H:%M:%S'
+    datetime_parsed = datetime.strptime(game['datetime'], format_str)
+
+    hours_difference = get_hours_until_match(datetime_parsed)
+
+    if hours_difference < 26: 
+        priority = 3
+    else:
+        priority = 2 if priority > 2 else priority
+
+
     if not can_user_register_val['himself']:
         return
 
@@ -239,7 +250,6 @@ async def register_plus_one(update: Update, context: CallbackContext):
         await update.message.reply_text("No games available. Start a new game with /start")
         return
 
-    chat_id = update.effective_chat.id
     game_id = list(data.keys())[-1]
     game = data[game_id]
     user = update.callback_query.from_user.username
@@ -358,7 +368,6 @@ async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 player['confirmed'] = True
                 save_data(data)
                 await update.message.reply_text(f"{user} confirmed his registration.")
-                await query.edit_message_text(text=get_message(), reply_markup=reply_markup, parse_mode=ParseMode.HTML)
                 return
 
     await update.message.reply_text(f"{user}, buddy, you don't need to confirm anything.")

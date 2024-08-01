@@ -1,6 +1,8 @@
 import json
 from telegram import Update
 from telegram.ext import ContextTypes, CallbackContext
+from datetime import datetime
+
 from constants import reply_markup, LAST_MATCH_FILE
 from telegram.constants import ParseMode
 from register_funcs import get_message
@@ -61,3 +63,12 @@ async def save_last_match(update: Update, context: ContextTypes.DEFAULT_TYPE):
     game = data[game_id]
     with open(LAST_MATCH_FILE, 'w') as file:
         json.dump(game["players"], file, indent=4)
+
+def get_hours_until_match(match_time_parsed):
+    datetime_now = datetime.now()
+
+    time_delta = match_time_parsed - datetime_now
+
+    hours_difference = time_delta.total_seconds() / 3600
+
+    return hours_difference

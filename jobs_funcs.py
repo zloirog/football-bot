@@ -1,7 +1,7 @@
 import datetime
 from telegram import Update
 from telegram.ext import CallbackContext
-from utils import is_chat_admin
+from utils import is_chat_admin, save_last_match
 from date_utils import next_saturday
 from constants import reply_markup
 from match_files import load_data, save_data
@@ -23,6 +23,8 @@ async def start(context: CallbackContext):
     game_date = next_saturday()
     game_id = game_date.strftime("%d.%m.%Y_%H_%M")
     game_time_frmt = game_date.strftime("%d.%m.%Y %H:%M")
+
+    save_last_match()
 
     data = load_data()
     if game_id in data:
