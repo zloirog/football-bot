@@ -17,3 +17,6 @@ keyboard = [
 
 ]
 reply_markup = InlineKeyboardMarkup(keyboard)
+
+DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S%z'
+SQL_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'

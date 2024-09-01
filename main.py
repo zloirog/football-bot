@@ -1,15 +1,16 @@
-import json
+import pytz
 import datetime
-import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, CallbackContext
-from date_utils import next_saturday
-from utils import refresh_message, show_registration_message, last_match, save_last_match
-from register_funcs import register, register_old, register_plus_one, can_user_register, confirm
+from bans import ban, get_my_bans, unban
+from date_utils import get_next_weekday
+from operations.chats import get_all_chats
+from utils import refresh_message, show_registration_message, last_match
+from register_funcs import register_himself, register_another_from_chat, register_plus_one, confirm
 from remove_funcs import remove, remove_plus_one, remove_other
 from jobs_funcs import get_jobs, start_repeating_job, stop_repeating_job, start
-from constants import MAX_PLAYERS, PRIORITY_HOURS, DATA_FILE, LAST_MATCH_FILE, CHAT_ID, reply_markup
+from constants import reply_markup
 
 
 async def info(update: Update, context: CallbackContext):
@@ -22,26 +23,52 @@ async def info(update: Update, context: CallbackContext):
                               """)
 
 
+def initiate(application): 
+    chats = get_all_chats()
+
+    for chat in chats:
+        now = pytz.timezone("Europe/Prague").localize(datetime.datetime.now())
+        next_weekday = get_next_weekday(chat['reg_week_day'], chat['reg_time'])
+        if next_weekday < now:
+            next_weekday += datetime.timedelta(days=7)
+        initial_delay = (next_weekday - now).total_seconds()
+
+        weekly_interval = 7 * 24 * 60 * 60  # 7 days in seconds
+
+        job_data = {
+        'chat_id': chat['chat_id'],
+        }
+
+        application.job_queue.run_repeating(
+            start,
+            interval=weekly_interval,
+            first=initial_delay,
+            data=job_data,
+            name=chat['chat_id']
+        )
+
 # Main function
 def main():
-    application = Application.builder().token("TG_TOKEN").build()
+    application = Application.builder().token("tg_token").build()
 
     application.add_handler(CommandHandler("start", start_repeating_job))
     application.add_handler(CommandHandler("stop", stop_repeating_job))
+    application.add_handler(CommandHandler("ban", ban))
+    application.add_handler(CommandHandler("unban", unban))
+    application.add_handler(CommandHandler("get_my_bans", get_my_bans))
+
 
     application.add_handler(CommandHandler(
         "show_registration_message", show_registration_message))
 
-    application.add_handler(CommandHandler("register", register_old))
-    application.add_handler(CommandHandler("quit", remove))
+    application.add_handler(CommandHandler("register_another_from_chat", register_another_from_chat))
     application.add_handler(CommandHandler("last_match", last_match))
-    application.add_handler(CommandHandler("save_last_match", save_last_match))
     application.add_handler(CommandHandler("remove_other", remove_other))
     application.add_handler(CommandHandler("confirm", confirm))
     application.add_handler(CommandHandler("get_jobs", get_jobs))
 
     callback_mapping = {
-        'register': register,
+        'register': register_himself,
         'register_plus_one': register_plus_one,
         'quit_confirm': remove,
         'refresh_message': refresh_message,
@@ -79,29 +106,7 @@ def main():
 
     application.add_handler(CallbackQueryHandler(callback_query_handler))
 
-    now = datetime.datetime.now()
-    next_wednesday = now + \
-        datetime.timedelta((2 - now.weekday() + 7) % 7)  # 2 for Wednesday
-    next_wednesday = datetime.datetime.combine(
-        next_wednesday, datetime.time(10, 0))
-    if next_wednesday < now:
-        next_wednesday += datetime.timedelta(days=7)
-    initial_delay = (next_wednesday - now).total_seconds()
-
-    # Schedule job to run every week
-    weekly_interval = 7 * 24 * 60 * 60  # 7 days in seconds
-
-    job_data = {
-        'chat_id': CHAT_ID,
-    }
-
-    application.job_queue.run_repeating(
-        start,
-        interval=weekly_interval,
-        first=initial_delay,
-        data=job_data,
-        name=str(CHAT_ID)
-    )
+    initiate(application)
 
     application.run_polling()
     application.idle()

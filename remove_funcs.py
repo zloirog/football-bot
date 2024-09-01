@@ -2,93 +2,69 @@ from datetime import datetime, timedelta
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
-from constants import MAX_PLAYERS, CHAT_ID, reply_markup
+from constants import DATETIME_FORMAT, MAX_PLAYERS, CHAT_ID, reply_markup
+from operations.bans import create_ban
+from operations.match_registrations import delete_match_plus_one_registration, delete_match_registration, get_current_match_registrations
+from operations.matches import get_current_match
 from utils import is_chat_admin, get_hours_until_match
 from register_funcs import get_message
-from match_files import load_data, save_data, ban_player
-
 
 async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    data = load_data()
-    if not data:
-        return
-
-    game_id = list(data.keys())[-1]
-    game = data[game_id]
     user = update.callback_query.from_user.username
+    chat_id = update.effective_chat.id
     query = update.callback_query
 
-    is_game_full = len(game['players']) == MAX_PLAYERS
 
-    format_str = '%Y-%m-%dT%H:%M:%S'
-    datetime_parsed = datetime.strptime(game['datetime'], format_str)
+    current_match = get_current_match_registrations(chat_id)[0]
+    
+    datetime_parsed = datetime.strptime(current_match['datetime'], DATETIME_FORMAT)
 
-    hours_difference = get_hours_until_match(datetime_parsed)
+    hours_difference = get_hours_until_match(current_match['datetime'])
 
-    if hours_difference < 22:
-        two_weeks = timedelta(weeks=2)
-        banned_until = datetime_parsed + two_weeks
-        ban_player(user, banned_until.isoformat())
-        await context.bot.send_message(chat_id=CHAT_ID, text=f"@{user} в бан нах! You are banned until {banned_until}")
-
-    for list_name in ["players", "waiting_list"]:
-        for player in game[list_name]:
-            if player['name'] == user:
-                game[list_name].remove(player)
-                if is_game_full and list_name == "players" and not len(game['waiting_list']) == 0:
-                    game["players"].append(game['waiting_list'][0])
-                    del game['waiting_list'][0]
-
-                save_data(data)
+    if hours_difference < 20: 
+        ten_days = timedelta(days=10)
+        banned_until = datetime_parsed + ten_days
+        create_ban(user, banned_until)
+        await context.bot.send_message(chat_id, text=f"@{user} в бан нах! You are banned until {banned_until}")
+    
+    delete_match_registration(user, current_match['match_id'])
 
     try:
-        await query.edit_message_text(text=get_message(), reply_markup=reply_markup, parse_mode=ParseMode.HTML)
+        await query.edit_message_text(text=get_message(chat_id), reply_markup=reply_markup, parse_mode=ParseMode.HTML)
     except Exception as error:
         print("No update", error)
         return
 
 
 async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    data = load_data()
-    if not data:
-        return
-
-    game_id = list(data.keys())[-1]
-    game = data[game_id]
     user = update.callback_query.from_user.username
+    chat_id = update.effective_chat.id
     query = update.callback_query
 
-    is_game_full = len(game['players']) == MAX_PLAYERS
 
-    for list_name in ["players", "waiting_list"]:
-        for player in game[list_name]:
-            if player['registered_by'] == user and player['name'] == f"{user} +1":
-                game[list_name].remove(player)
-                if is_game_full and list_name == "players":
-                    game["players"].append(game['waiting_list'][0])
-                    del game['waiting_list'][0]
+    current_match = get_current_match_registrations(chat_id)[0]
 
-                save_data(data)
+    hours_difference = get_hours_until_match(current_match['datetime'])
+
+    if hours_difference < 22: 
+        await context.bot.send_message(chat_id, text=f"Плюсик @{user} отвалился меньше чем за 20 часов!")
+    
+    delete_match_plus_one_registration(user, current_match['match_id'])
+
     try:
-        await query.edit_message_text(text=get_message(), reply_markup=reply_markup, parse_mode=ParseMode.HTML)
-    except:
-        print("No update")
+        await query.edit_message_text(text=get_message(chat_id), reply_markup=reply_markup, parse_mode=ParseMode.HTML)
+    except Exception as error:
+        print("No update", error)
         return
 
 
 async def remove_other(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await is_chat_admin(update, context):
         return
-
-    data = load_data()
-    if not data:
-        await update.message.reply_text("No games available.")
-        return
-
-    game_id = list(data.keys())[-1]
-    game = data[game_id]
-
-    is_game_full = len(game['players']) == MAX_PLAYERS
+    
+    chat_id = update.effective_chat.id
+    current_match = get_current_match(chat_id)[0]
+    message_id = update.message.id
 
     if len(context.args) == 1 and context.args[0].startswith('@'):
         user = context.args[0][1:]
@@ -96,16 +72,6 @@ async def remove_other(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("user is not provided.")
         return
 
-    for list_name in ["players", "waiting_list"]:
-        for player in game[list_name]:
-            if player['name'] == user:
-                game[list_name].remove(player)
-                if is_game_full and list_name == "players":
-                    game["players"].append(game['waiting_list'][0])
-                    del game['waiting_list'][0]
+    delete_match_registration(user, current_match['match_id'])
 
-                save_data(data)
-                await update.message.reply_text(f"{user} removed successfully.")
-                return
-
-    await update.message.reply_text(f"{user} is not in the list.")
+    await context.bot.set_message_reaction(chat_id=chat_id, message_id=message_id, reaction="👌")
