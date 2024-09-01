@@ -76,3 +76,21 @@ async def remove_other(update: Update, context: ContextTypes.DEFAULT_TYPE):
     delete_match_registration(user, current_match['match_id'])
 
     await context.bot.set_message_reaction(chat_id=chat_id, message_id=message_id, reaction="👌")
+
+async def remove_other_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await is_chat_admin(update, context):
+        return
+    
+    chat_id = update.effective_chat.id
+    current_match = get_current_match(chat_id)[0]
+    message_id = update.message.id
+
+    if len(context.args) == 1 and context.args[0].startswith('@'):
+        user = context.args[0][1:]
+    else:
+        await update.message.reply_text("user is not provided.")
+        return
+
+    delete_match_plus_one_registration(user, current_match['match_id'])
+
+    await context.bot.set_message_reaction(chat_id=chat_id, message_id=message_id, reaction="👌")
