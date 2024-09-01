@@ -40,12 +40,19 @@ WITH OrderedMatches AS (
            ROW_NUMBER() OVER (ORDER BY m.datetime DESC) AS rn
     FROM Matches m
     WHERE m.chat_id = ?
+),
+First14Registrations AS (
+    SELECT mr.match_id,
+           mr.nickname,
+           ROW_NUMBER() OVER (PARTITION BY mr.match_id ORDER BY mr.priority, mr.created_at) AS rn
+    FROM Match_Registration mr
 )
-SELECT mr.nickname
-FROM Match_Registration mr
-JOIN OrderedMatches om ON mr.match_id = om.match_id
+SELECT f14r.nickname
+FROM First14Registrations f14r
+JOIN OrderedMatches om ON f14r.match_id = om.match_id
 WHERE om.rn = 2
-AND mr.nickname = ?;
+AND f14r.rn <= 14
+AND f14r.nickname = ?;
                            """, (chat_id, nickname))
     if data is None:
         return False

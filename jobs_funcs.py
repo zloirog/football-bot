@@ -31,7 +31,6 @@ async def start(context: CallbackContext):
     next_match_datetime = get_next_weekday(chat_data['game_week_day'], chat_data['game_time'])
     create_match(next_match_datetime, 130, chat_id)
 
-
     game_time_frmt = next_match_datetime.strftime("%d.%m.%Y %H:%M")
 
     sent_message = await context.bot.send_message(chat_id=chat_id, text=f"Registration opened! \n{game_time_frmt}", reply_markup=reply_markup)
