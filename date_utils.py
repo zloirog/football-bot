@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 import pytz
 
+from constants import DATETIME_FORMAT
+
 def get_next_weekday(weekday_name, time_str):
     # Dictionary to convert weekday name to a weekday number (0=Monday, 6=Sunday)
     weekdays = {
@@ -36,3 +38,15 @@ def get_next_weekday(weekday_name, time_str):
         next_weekday = datetime.combine(now, target_time)
     
     return pytz.timezone('Europe/Prague').localize(next_weekday)
+
+
+
+def get_hours_until_match(game_time):
+    datetime_parsed = datetime.strptime(game_time, DATETIME_FORMAT)
+    datetime_now = pytz.timezone("Europe/Prague").localize(datetime.now())
+
+    time_delta = datetime_parsed - datetime_now
+
+    hours_difference = time_delta.total_seconds() / 3600
+
+    return hours_difference

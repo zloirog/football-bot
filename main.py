@@ -1,9 +1,9 @@
+import os
 import pytz
 import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.constants import ParseMode
-from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, CallbackContext
-from bans import ban, get_my_bans, unban
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, CallbackContext
+from bans import ban, get_all_bans_command, get_my_bans, unban
 from date_utils import get_next_weekday
 from operations.chats import get_all_chats
 from utils import refresh_message, show_registration_message, last_match
@@ -12,6 +12,8 @@ from remove_funcs import remove, remove_plus_one, remove_other
 from jobs_funcs import get_jobs, start_repeating_job, stop_repeating_job, start
 from constants import reply_markup
 
+
+TOKEN = os.getenv("TG_TOKEN")
 
 async def info(update: Update, context: CallbackContext):
     await update.message.reply_text("""Запись проходит автоматически каждую среду в 12 часов дня.
@@ -49,13 +51,14 @@ def initiate(application):
 
 # Main function
 def main():
-    application = Application.builder().token("tg_token").build()
+    application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start_repeating_job))
     application.add_handler(CommandHandler("stop", stop_repeating_job))
     application.add_handler(CommandHandler("ban", ban))
     application.add_handler(CommandHandler("unban", unban))
     application.add_handler(CommandHandler("get_my_bans", get_my_bans))
+    application.add_handler(CommandHandler("get_all_bans", get_all_bans_command))
 
 
     application.add_handler(CommandHandler(

@@ -11,6 +11,9 @@ def create_ban(nickname, until):
 def get_players_ban(nickname):
     return fetch_query("SELECT * FROM Bans WHERE nickname = ?", (nickname,))
 
+def get_all_bans():
+    return fetch_query("SELECT * FROM Bans")
+
 # Update
 def update_ban(ban_id, nickname, until):
     execute_query("UPDATE Bans SET nickname = ?, until = ? WHERE ban_id = ?", (nickname, until, ban_id))

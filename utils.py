@@ -2,9 +2,8 @@ import pytz
 from operations.matches import get_last_match
 from telegram import Update
 from telegram.ext import ContextTypes, CallbackContext
-from datetime import datetime
 
-from constants import DATETIME_FORMAT, reply_markup
+from constants import  reply_markup
 from telegram.constants import ParseMode
 from register_funcs import get_message
 
@@ -55,13 +54,3 @@ async def last_match(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message += f"{idx + 1}. @{player['nickname']}\n"
 
     await update.message.reply_text(message, parse_mode=ParseMode.HTML)
-
-def get_hours_until_match(game_time):
-    datetime_parsed = datetime.strptime(game_time, DATETIME_FORMAT)
-    datetime_now = pytz.timezone("Europe/Prague").localize(datetime.now())
-
-    time_delta = datetime_parsed - datetime_now
-
-    hours_difference = time_delta.total_seconds() / 3600
-
-    return hours_difference

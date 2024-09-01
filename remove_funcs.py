@@ -3,10 +3,11 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 from constants import DATETIME_FORMAT, MAX_PLAYERS, CHAT_ID, reply_markup
+from date_utils import get_hours_until_match
 from operations.bans import create_ban
 from operations.match_registrations import delete_match_plus_one_registration, delete_match_registration, get_current_match_registrations
 from operations.matches import get_current_match
-from utils import is_chat_admin, get_hours_until_match
+from utils import is_chat_admin
 from register_funcs import get_message
 
 async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):

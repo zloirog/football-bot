@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import pytz
+from date_utils import get_hours_until_match
 from operations.bans import delete_ban, get_players_ban
 from operations.chats import get_chat
 from operations.match_registrations import confirm_user_registration, create_match_registration, delete_match_registration, get_current_match_registrations
@@ -11,13 +12,22 @@ from constants import  DATETIME_FORMAT, PRIORITY_HOURS, SQL_DATETIME_FORMAT, rep
 from operations.matches import get_current_match, was_in_last_match
 
 
+
 def get_message(chat_id):
     current_match = get_current_match(chat_id)[0]
     current_match_registrations = get_current_match_registrations(chat_id)
 
     game_time_frmt = datetime.strptime(current_match['datetime'], DATETIME_FORMAT).strftime("%d.%m.%Y %H:%M")
+
+    message = f"Registration opened! \n{game_time_frmt}\n\n"
+
+    hours_until_match = get_hours_until_match(current_match['datetime'])
+
+    if hours_until_match < 0:
+        message = f"Registration <b>CLOSED!</b> \n{game_time_frmt}\n\n"
+
     
-    message = f"Registration opened! \n{game_time_frmt}\n\n" + registered(current_match_registrations)
+    message += registered(current_match_registrations)
     return message
 
 
@@ -97,6 +107,11 @@ def register_core(chat_id, nickname, registered_by, is_plus=False, confirmed=Tru
     start_time = current_match['datetime']
     reg_time = current_match['created_at']
 
+    hours_until_match = get_hours_until_match(current_match['datetime'])
+
+    if hours_until_match < 0:
+        return
+
     priority = get_priority(nickname, reg_time, start_time, was_in_last_match_res)
 
     create_result = create_match_registration(nickname, registered_by, is_plus, confirmed, priority, match_id)
@@ -157,7 +172,7 @@ def registered(current_match):
 
     message = "<b>Registered Players:</b>\n"
     for idx, match_registration in enumerate(current_match):
-        if idx == 13:
+        if idx == 14:
             message += "\n<b>Waiting List:</b>\n"
 
         message += f"{idx + 1}. @{match_registration['nickname']} <i>(Priority {match_registration['priority']})</i>"
