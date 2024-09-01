@@ -8,7 +8,7 @@ from date_utils import get_next_weekday
 from operations.chats import get_all_chats
 from utils import refresh_message, show_registration_message, last_match
 from register_funcs import register_himself, register_another_from_chat, register_plus_one, confirm
-from remove_funcs import remove, remove_plus_one, remove_other
+from remove_funcs import remove, remove_other_plus_one, remove_plus_one, remove_other
 from jobs_funcs import get_jobs, start_repeating_job, stop_repeating_job, start
 from constants import reply_markup
 
@@ -67,6 +67,8 @@ def main():
     application.add_handler(CommandHandler("register_another_from_chat", register_another_from_chat))
     application.add_handler(CommandHandler("last_match", last_match))
     application.add_handler(CommandHandler("remove_other", remove_other))
+    application.add_handler(CommandHandler("remove_other", remove_other_plus_one))
+
     application.add_handler(CommandHandler("confirm", confirm))
     application.add_handler(CommandHandler("get_jobs", get_jobs))
 
