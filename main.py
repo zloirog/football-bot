@@ -67,7 +67,7 @@ def main():
     application.add_handler(CommandHandler("register_another_from_chat", register_another_from_chat))
     application.add_handler(CommandHandler("last_match", last_match))
     application.add_handler(CommandHandler("remove_other", remove_other))
-    application.add_handler(CommandHandler("remove_other", remove_other_plus_one))
+    application.add_handler(CommandHandler("remove_other_plus_one", remove_other_plus_one))
 
     application.add_handler(CommandHandler("confirm", confirm))
     application.add_handler(CommandHandler("get_jobs", get_jobs))
