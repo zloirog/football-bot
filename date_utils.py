@@ -14,16 +14,16 @@ def get_next_weekday(weekday_name, time_str):
         'saturday': 5,
         'sunday': 6
     }
-    
+
     # Parse the time string
     target_time = datetime.strptime(time_str, '%H:%M').time()
-    
+
     # Get the current date and time
     now = datetime.now()
-    
+
     # Find the target weekday number
     target_weekday = weekdays[weekday_name.lower()]
-    
+
     # Calculate days until the next occurrence of the target weekday
     days_ahead = target_weekday - now.weekday()
     if days_ahead <= 0:
@@ -36,7 +36,7 @@ def get_next_weekday(weekday_name, time_str):
     # Check if the target weekday is today and before the target time
     if now.weekday() == target_weekday and now.time() < target_time:
         next_weekday = datetime.combine(now, target_time)
-    
+
     return pytz.timezone('Europe/Prague').localize(next_weekday)
 
 
@@ -50,3 +50,7 @@ def get_hours_until_match(game_time):
     hours_difference = time_delta.total_seconds() / 3600
 
     return hours_difference
+
+def get_current_time():
+    now = datetime.now().astimezone()
+    return now

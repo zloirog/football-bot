@@ -1,11 +1,8 @@
-import datetime
-
-import pytz
 from operations.chats import create_chat, delete_chat, get_chat
 from operations.matches import create_match
 from utils import is_chat_admin
-from date_utils import get_next_weekday
-from constants import reply_markup
+from date_utils import get_next_weekday, get_current_time
+from constants import reply_markup, DATETIME_FORMAT
 
 from telegram import Update
 from telegram.ext import CallbackContext
@@ -18,6 +15,7 @@ async def get_jobs(update: Update, context: CallbackContext):
     s = ""
     for job in jobs:
         s += repr(job)
+        s += job.next_t.strftime(DATETIME_FORMAT) + "\n"
 
     await update.message.reply_text("jobs: " + s)
 
@@ -39,7 +37,7 @@ async def start(context: CallbackContext):
 async def start_repeating_job(update: Update, context: CallbackContext):
     if not await is_chat_admin(update, context):
         return
-    
+
     chat_id = update.effective_chat.id
 
     jobs = context.job_queue.jobs()
@@ -49,7 +47,7 @@ async def start_repeating_job(update: Update, context: CallbackContext):
     if job_exists:
         await update.message.reply_text('Already started in that chat.')
         return
-    
+
     chat_name = context.args[0]
     reg_week_day = context.args[1]
     reg_time = context.args[2]
@@ -60,7 +58,7 @@ async def start_repeating_job(update: Update, context: CallbackContext):
 
     next_reg_time = get_next_weekday(reg_week_day, reg_time)
 
-    now = pytz.timezone("Europe/Prague").localize(datetime.datetime.now())
+    now = get_current_time()
 
     initial_delay = (next_reg_time - now).total_seconds()
 
@@ -86,15 +84,15 @@ async def start_repeating_job(update: Update, context: CallbackContext):
 async def stop_repeating_job(update: Update, context: CallbackContext):
     if not await is_chat_admin(update, context):
         return
-    
+
     chat_id = update.effective_chat.id
 
     jobs = context.job_queue.jobs()
-    for job in jobs: 
+    for job in jobs:
         if str(job.name) == str(chat_id):
             job.schedule_removal()
             delete_chat(chat_id)
             await update.message.reply_text("Bot stopped.")
             return
-            
+
     await update.message.reply_text("No recurrent messages are currently scheduled.")

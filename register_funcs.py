@@ -1,9 +1,8 @@
 from datetime import datetime
 
 import pytz
-from date_utils import get_hours_until_match
+from date_utils import get_hours_until_match, get_current_time
 from operations.bans import delete_ban, get_players_ban
-from operations.chats import get_chat
 from operations.match_registrations import confirm_user_registration, create_match_registration, delete_match_registration, get_current_match_registrations
 from telegram import Update
 from telegram.constants import ParseMode
@@ -26,21 +25,21 @@ def get_message(chat_id):
     if hours_until_match < 0:
         message = f"Registration <b>CLOSED!</b> \n{game_time_frmt}\n\n"
 
-    
+
     message += registered(current_match_registrations)
     return message
 
 
 def is_player_banned(player):
     player_bans = get_players_ban(player)
-    current_datetime = pytz.timezone("Europe/Prague").localize(datetime.now())
+    current_datetime = get_current_time()
 
     for ban in player_bans:
         user_date = datetime.fromisoformat(ban['until'])
 
         if current_datetime < user_date:
             return True
-        
+
         delete_ban(['id'])
 
     return False
@@ -62,18 +61,18 @@ async def check_for_confimation(context: ContextTypes.DEFAULT_TYPE):
 def get_priority(player, reg_time, game_time, was_in_last_match):
     from utils import get_hours_until_match
 
-    now = pytz.timezone("Europe/Prague").localize(datetime.now())
+    now = get_current_time()
     reg_time = pytz.timezone("Europe/Prague").localize(datetime.strptime(reg_time, SQL_DATETIME_FORMAT))
 
     if is_player_banned(player):
         return 4
     if (now - reg_time).total_seconds() / 7200 < PRIORITY_HOURS and was_in_last_match:
         return 1
-    
+
     hours_difference = get_hours_until_match(game_time)
     if hours_difference < 26:
         return 3
-    
+
     return 2
 
 
@@ -87,7 +86,7 @@ async def register_another_from_chat(update: Update, context: CallbackContext):
 
     if context.args[0].startswith('@'):
         player = context.args[0][1:]
-    else: 
+    else:
         return
 
     res = register_core(chat_id, player, user, False, False)
@@ -118,7 +117,7 @@ def register_core(chat_id, nickname, registered_by, is_plus=False, confirmed=Tru
 
     return create_result
 
-    
+
 async def register_himself(update: Update, context: CallbackContext):
     user = update.callback_query.from_user.username
     chat_id = update.effective_chat.id
@@ -165,7 +164,7 @@ def can_user_register(player, players):
     return {"himself": himself, "from_chat": from_chat, "plus_one": plus_one}
 
 def registered(current_match):
-    if len(current_match) == 0: 
+    if len(current_match) == 0:
         message = "<b>No registrations yet!</b>"
 
         return message

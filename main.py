@@ -1,10 +1,9 @@
 import os
-import pytz
 import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, CallbackContext
 from bans import ban, get_all_bans_command, get_my_bans, unban
-from date_utils import get_next_weekday
+from date_utils import get_next_weekday, get_current_time
 from operations.chats import get_all_chats
 from utils import refresh_message, show_registration_message, last_match
 from register_funcs import register_himself, register_another_from_chat, register_plus_one, confirm
@@ -25,14 +24,15 @@ async def info(update: Update, context: CallbackContext):
                               """)
 
 
-def initiate(application): 
+def initiate(application):
     chats = get_all_chats()
 
     for chat in chats:
-        now = pytz.timezone("Europe/Prague").localize(datetime.datetime.now())
+        now = get_current_time()
         next_weekday = get_next_weekday(chat['reg_week_day'], chat['reg_time'])
         if next_weekday < now:
             next_weekday += datetime.timedelta(days=7)
+
         initial_delay = (next_weekday - now).total_seconds()
 
         weekly_interval = 7 * 24 * 60 * 60  # 7 days in seconds

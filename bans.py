@@ -12,13 +12,13 @@ from utils import is_chat_admin
 async def ban(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await is_chat_admin(update, context):
         return
-    
+
     chat_id = update.effective_chat.id
     message_id = update.message.id
 
     if context.args[0].startswith('@'):
         player = context.args[0][1:]
-    else: 
+    else:
         return
 
     current_match = get_current_match(chat_id)[0]
@@ -34,17 +34,17 @@ async def ban(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def unban(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await is_chat_admin(update, context):
         return
-    
+
     chat_id = update.effective_chat.id
     message_id = update.message.id
 
     if context.args[0].startswith('@'):
         player = context.args[0][1:]
-    else: 
+    else:
         return
-    
+
     delete_ban(player)
-    
+
     await context.bot.set_message_reaction(chat_id=chat_id, message_id=message_id, reaction="👌")
 
 
@@ -66,7 +66,7 @@ async def get_all_bans_command(update: Update, context: ContextTypes.DEFAULT_TYP
 
     bans = get_all_bans()
 
-    message = f"<b>List of all bans:</b> \n"
+    message = "<b>List of all bans:</b> \n"
 
     for idx, ban in enumerate(bans):
         message += f"<b>{idx + 1}: {ban['nickname']}</b> {ban['until']}\n"
