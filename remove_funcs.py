@@ -27,7 +27,7 @@ async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
         create_ban(user, banned_until)
         await context.bot.send_message(chat_id, text=f"@{user} в бан нах! You are banned until {banned_until}")
 
-    delete_match_registration(user, current_match['match_id'])
+    delete_match_registration(current_match['match_id'], user )
 
     try:
         await query.edit_message_text(text=get_message(chat_id), reply_markup=reply_markup, parse_mode=ParseMode.HTML)
@@ -48,7 +48,7 @@ async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if hours_difference < 22:
         await context.bot.send_message(chat_id, text=f"Плюсик @{user} отвалился меньше чем за 20 часов!")
 
-    delete_match_plus_one_registration(user, current_match['match_id'])
+    delete_match_plus_one_registration(current_match['match_id'], user)
 
     try:
         await query.edit_message_text(text=get_message(chat_id), reply_markup=reply_markup, parse_mode=ParseMode.HTML)
@@ -71,7 +71,7 @@ async def remove_other(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("user is not provided.")
         return
 
-    delete_match_registration(user, current_match['match_id'])
+    delete_match_registration(current_match['match_id'], user)
 
     await context.bot.set_message_reaction(chat_id=chat_id, message_id=message_id, reaction="👌")
 
@@ -89,6 +89,6 @@ async def remove_other_plus_one(update: Update, context: ContextTypes.DEFAULT_TY
         await update.message.reply_text("user is not provided.")
         return
 
-    delete_match_plus_one_registration(user, current_match['match_id'])
+    delete_match_plus_one_registration(current_match['match_id'], user)
 
     await context.bot.set_message_reaction(chat_id=chat_id, message_id=message_id, reaction="👌")

@@ -48,20 +48,22 @@ JOIN Match_Registration mr ON om.match_id = mr.match_id
 ORDER BY mr.priority ASC, mr.registered_at;
                        """, ((chat_id,)))
 
+def check_if_user_registered(match_id, nickname):
+    return fetch_one_query("SELECT * FROM Match_Registration WHERE match_id = ? AND nickname = ?", (match_id, nickname))
 
 # Update
 def update_match_registration(registration_id, nickname, registered_by, is_plus, priority, match_id):
     execute_query("UPDATE Match_Registration SET nickname = ?, registered_by = ?, is_plus = ?, confirmed = ?, priority = ?, match_id = ? WHERE registration_id = ?", (nickname, registered_by, is_plus, priority, match_id, registration_id))
 
-def confirm_user_registration(nickname):
+def confirm_user_registration(match_id, nickname):
     execute_query("""
 UPDATE Match_Registration SET confirmed = 1
-WHERE registration_id = (SELECT MAX(match_id) FROM Match_Registration WHERE nickname = ?)
-""", ((nickname,)))
+WHERE match_id = (SELECT MAX(match_id) FROM Match_Registration WHERE nickname = ? AND match_id = ?)
+""", ((nickname, match_id)))
 
 # Delete
-def delete_match_registration(nickname, match_id):
+def delete_match_registration(match_id, nickname):
     execute_query("DELETE FROM Match_Registration WHERE nickname = ? AND match_id = ?", (nickname, match_id))
 
-def delete_match_plus_one_registration(nickname, match_id):
+def delete_match_plus_one_registration(match_id, nickname):
     execute_query("DELETE FROM Match_Registration WHERE registered_by = ? AND match_id = ? AND is_plus = 1", (nickname, match_id))

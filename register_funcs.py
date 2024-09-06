@@ -3,14 +3,12 @@ from datetime import datetime
 import pytz
 from date_utils import get_hours_until_match, get_current_time
 from operations.bans import delete_ban, get_players_ban
-from operations.match_registrations import confirm_user_registration, create_match_registration, delete_match_registration, get_current_match_registrations
+from operations.match_registrations import check_if_user_registered, confirm_user_registration, create_match_registration, delete_match_registration, get_current_match_registrations
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import CallbackContext, ContextTypes
 from constants import  DATETIME_FORMAT, PRIORITY_HOURS, SQL_DATETIME_FORMAT, reply_markup
 from operations.matches import get_current_match, was_in_last_match
-
-
 
 def get_message(chat_id):
     current_match = get_current_match(chat_id)[0]
@@ -49,13 +47,14 @@ async def check_for_confimation(context: ContextTypes.DEFAULT_TYPE):
     chat_id = job_data['chat_id']
     name = job_data['name']
 
-    curr_match = get_current_match_registrations(chat_id)
+    curr_match = get_current_match(chat_id)[0]
 
-    for player in curr_match:
-        if player['nickname'] == name and player['confirmed'] == False:
-            delete_match_registration(player['registration_id'])
-            await context.bot.send_message(chat_id=chat_id, text=f"@{name} did not confirmed his registration!")
-            return
+    is_user_registered = check_if_user_registered(curr_match['match_id'], name)
+    
+    if is_user_registered['confirmed'] == 0:
+        delete_match_registration(curr_match['match_id'], name)        
+        await context.bot.send_message(chat_id=chat_id, text=f"@{name} did not confirmed his registration!")
+        return
 
 
 def get_priority(player, reg_time, game_time, was_in_last_match):
@@ -88,6 +87,9 @@ async def register_another_from_chat(update: Update, context: CallbackContext):
         return
 
     res = register_core(chat_id, player, user, False, False)
+    
+    job_data = {'name': player, 'chat_id': chat_id}
+    context.job_queue.run_once(check_for_confimation, 14400, data=job_data)
 
     if res:
         await context.bot.set_message_reaction(chat_id=chat_id, message_id=message_id, reaction="👌")
@@ -103,6 +105,14 @@ def register_core(chat_id, nickname, registered_by, is_plus=False, confirmed=Tru
     match_id = current_match['match_id']
     start_time = current_match['datetime']
     reg_time = current_match['created_at']
+
+    is_user_registered = check_if_user_registered(match_id, nickname)
+
+    if is_user_registered and is_user_registered['confirmed'] == 0:
+        print(is_user_registered)
+    
+        confirm_user_registration(match_id, nickname)
+        return True
 
     hours_until_match = get_hours_until_match(current_match['datetime'])
 
@@ -144,7 +154,6 @@ async def register_plus_one(update: Update, context: CallbackContext):
     if res:
         query = update.callback_query
         await query.edit_message_text(text=get_message(chat_id), reply_markup=reply_markup, parse_mode=ParseMode.HTML)
-
     return
 
 
@@ -185,6 +194,10 @@ async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user.username
     message_id = update.message.id
 
-    confirm_user_registration(user)
+    res = get_current_match(chat_id)
+    current_match = res[0]
+    match_id = current_match['match_id']
+
+    confirm_user_registration(match_id, user)
 
     await context.bot.set_message_reaction(chat_id=chat_id, message_id=message_id, reaction="👌")
