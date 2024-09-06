@@ -12,7 +12,7 @@ def create_match_registration(nickname, registered_by, is_plus, confirmed, prior
         FROM Match_Registration
         WHERE registered_by = ? AND match_id = ?
     """, (registered_by, match_id))
-    
+
     self_reg = int(results['self_reg']) if results['self_reg'] is not None else 0
     other_chat_reg = int(results['other_chat_reg']) if results['other_chat_reg'] is not None else 0
     extra_reg = int(results['extra_reg']) if results['extra_reg'] is not None else 0
@@ -20,15 +20,15 @@ def create_match_registration(nickname, registered_by, is_plus, confirmed, prior
     if nickname == registered_by and is_plus == 0:
         if int(self_reg) > 0:
             return False
-    
+
     elif nickname != registered_by and is_plus == 0:
         if int(other_chat_reg) > 0:
             return False
-    
+
     elif nickname != registered_by and is_plus != 0:
         if int(extra_reg) > 0:
             return False
-    
+
     return execute_query("INSERT INTO Match_Registration (nickname, registered_by, is_plus, confirmed, priority, match_id) VALUES (?, ?, ?, ?, ?, ?)", (nickname, registered_by, is_plus, confirmed, priority, match_id))
 
 # Read
@@ -45,7 +45,7 @@ WITH OrderedMatches AS (
 SELECT om.match_id, om.datetime, mr.nickname, mr.priority, mr.confirmed, mr.registration_id
 FROM OrderedMatches om
 JOIN Match_Registration mr ON om.match_id = mr.match_id
-ORDER BY mr.priority ASC;
+ORDER BY mr.priority ASC, mr.registered_at;
                        """, ((chat_id,)))
 
 
@@ -53,9 +53,9 @@ ORDER BY mr.priority ASC;
 def update_match_registration(registration_id, nickname, registered_by, is_plus, priority, match_id):
     execute_query("UPDATE Match_Registration SET nickname = ?, registered_by = ?, is_plus = ?, confirmed = ?, priority = ?, match_id = ? WHERE registration_id = ?", (nickname, registered_by, is_plus, priority, match_id, registration_id))
 
-def confirm_user_registration(nickname): 
+def confirm_user_registration(nickname):
     execute_query("""
-UPDATE Match_Registration SET confirmed = 1 
+UPDATE Match_Registration SET confirmed = 1
 WHERE registration_id = (SELECT MAX(match_id) FROM Match_Registration WHERE nickname = ?)
 """, ((nickname,)))
 

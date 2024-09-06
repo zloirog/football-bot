@@ -44,7 +44,7 @@ WITH OrderedMatches AS (
 First14Registrations AS (
     SELECT mr.match_id,
            mr.nickname,
-           ROW_NUMBER() OVER (PARTITION BY mr.match_id ORDER BY mr.priority, mr.created_at) AS rn
+           ROW_NUMBER() OVER (PARTITION BY mr.match_id ORDER BY mr.priority) AS rn
     FROM Match_Registration mr
 )
 SELECT f14r.nickname
@@ -56,9 +56,9 @@ AND f14r.nickname = ?;
                            """, (chat_id, nickname))
     if data is None:
         return False
-    else: 
+    else:
         return True
-    
+
 
 # Update
 def update_match(match_id, date, time, amount_per_person, chat_id):

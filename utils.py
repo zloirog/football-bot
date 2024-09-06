@@ -1,4 +1,3 @@
-import pytz
 from operations.matches import get_last_match
 from telegram import Update
 from telegram.ext import ContextTypes, CallbackContext
@@ -43,13 +42,13 @@ async def show_registration_message(update: Update, context: CallbackContext):
 
 async def last_match(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
-    
+
     last_match = get_last_match(chat_id)
 
     if len(last_match) == 0:
         return await update.message.reply_text("No last match available", parse_mode=ParseMode.HTML)
-    
-    message = f"<b>Last Match Players for the game {last_match[0].datetime}:</b>\n"
+
+    message = f"<b>Last Match Players for the game {last_match[0]['datetime']}:</b>\n"
     for idx, player in enumerate(last_match):
         message += f"{idx + 1}. @{player['nickname']}\n"
 

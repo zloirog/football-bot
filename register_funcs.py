@@ -59,8 +59,6 @@ async def check_for_confimation(context: ContextTypes.DEFAULT_TYPE):
 
 
 def get_priority(player, reg_time, game_time, was_in_last_match):
-    from utils import get_hours_until_match
-
     now = get_current_time()
     reg_time = pytz.timezone("Europe/Prague").localize(datetime.strptime(reg_time, SQL_DATETIME_FORMAT))
 
