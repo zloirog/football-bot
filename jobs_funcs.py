@@ -7,18 +7,15 @@ from constants import reply_markup, DATETIME_FORMAT
 from telegram import Update
 from telegram.ext import CallbackContext
 
-
-
 async def get_jobs(update: Update, context: CallbackContext):
     jobs = context.job_queue.jobs()
 
-    s = ""
+    job_info = ""
     for job in jobs:
-        s += repr(job)
-        s += job.next_t.strftime(DATETIME_FORMAT) + "\n"
+        job_info += repr(job)
+        job_info += job.next_t.strftime(DATETIME_FORMAT) + "\n"
 
-    await update.message.reply_text("jobs: " + s)
-
+    await update.message.reply_text("Current jobs: \n" + job_info)
 
 async def start(context: CallbackContext):
     job_data = context.job.data
@@ -29,9 +26,9 @@ async def start(context: CallbackContext):
     next_match_datetime = get_next_weekday(chat_data['game_week_day'], chat_data['game_time'])
     create_match(next_match_datetime, 130, chat_id)
 
-    game_time_frmt = next_match_datetime.strftime("%d.%m.%Y %H:%M")
+    formatted_game_time = next_match_datetime.strftime("%d.%m.%Y %H:%M")
 
-    sent_message = await context.bot.send_message(chat_id=chat_id, text=f"Registration opened! \n{game_time_frmt}", reply_markup=reply_markup)
+    sent_message = await context.bot.send_message(chat_id=chat_id, text=f"Registration is now open! \nGame time: {formatted_game_time}", reply_markup=reply_markup)
     await context.bot.pin_chat_message(chat_id=chat_id, message_id=sent_message.message_id)
 
 async def start_repeating_job(update: Update, context: CallbackContext):
@@ -45,7 +42,7 @@ async def start_repeating_job(update: Update, context: CallbackContext):
     job_exists = any(str(job.name) == str(chat_id) for job in jobs)
 
     if job_exists:
-        await update.message.reply_text('Already started in that chat.')
+        await update.message.reply_text('The bot is already running in this chat.')
         return
 
     chat_name = context.args[0]
@@ -77,9 +74,7 @@ async def start_repeating_job(update: Update, context: CallbackContext):
         name=str(chat_id)  # Using chat_id as job name
     )
     context.chat_data[str(chat_id)] = job
-    await update.message.reply_text("Bot started.")
-
-
+    await update.message.reply_text("The bot has started successfully.")
 
 async def stop_repeating_job(update: Update, context: CallbackContext):
     if not await is_chat_admin(update, context):
@@ -92,7 +87,7 @@ async def stop_repeating_job(update: Update, context: CallbackContext):
         if str(job.name) == str(chat_id):
             job.schedule_removal()
             delete_chat(chat_id)
-            await update.message.reply_text("Bot stopped.")
+            await update.message.reply_text("The bot has been stopped.")
             return
 
-    await update.message.reply_text("No recurrent messages are currently scheduled.")
+    await update.message.reply_text("No recurrent messages are currently scheduled for this chat.")

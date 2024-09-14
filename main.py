@@ -75,8 +75,6 @@ def main():
     
     application.add_handler(CommandHandler("register_me", register_player))
     application.add_handler(CommandHandler("get_all_players", get_all_players))
-    
-    
 
     callback_mapping = {
         'register': register_himself,

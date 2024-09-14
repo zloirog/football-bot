@@ -25,16 +25,15 @@ async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ten_days = timedelta(days=10)
         banned_until = datetime_parsed + ten_days
         create_ban(user, banned_until)
-        await context.bot.send_message(chat_id, text=f"@{user} в бан нах! You are banned until {banned_until}")
+        await context.bot.send_message(chat_id, text=f"@{user}, you've been banned until {banned_until} for cancelling your registration too close to the match.")
 
-    delete_match_registration(current_match['match_id'], user )
+    delete_match_registration(current_match['match_id'], user)
 
     try:
         await query.edit_message_text(text=get_message(chat_id), reply_markup=reply_markup, parse_mode=ParseMode.HTML)
     except Exception as error:
         print("No update", error)
         return
-
 
 async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.callback_query.from_user.username
@@ -46,7 +45,7 @@ async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
     hours_difference = get_hours_until_match(current_match['datetime'])
 
     if hours_difference < 22:
-        await context.bot.send_message(chat_id, text=f"Плюсик @{user} отвалился меньше чем за 20 часов!")
+        await context.bot.send_message(chat_id, text=f"@{user}, your plus one has been removed as it was cancelled less than 20 hours before the match.")
 
     delete_match_plus_one_registration(current_match['match_id'], user)
 
@@ -55,7 +54,6 @@ async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as error:
         print("No update", error)
         return
-
 
 async def remove_other(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await is_chat_admin(update, context):
@@ -68,7 +66,7 @@ async def remove_other(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) == 1 and context.args[0].startswith('@'):
         user = context.args[0][1:]
     else:
-        await update.message.reply_text("user is not provided.")
+        await update.message.reply_text("No user was provided.")
         return
 
     delete_match_registration(current_match['match_id'], user)
@@ -86,7 +84,7 @@ async def remove_other_plus_one(update: Update, context: ContextTypes.DEFAULT_TY
     if len(context.args) == 1 and context.args[0].startswith('@'):
         user = context.args[0][1:]
     else:
-        await update.message.reply_text("user is not provided.")
+        await update.message.reply_text("No user was provided.")
         return
 
     delete_match_plus_one_registration(current_match['match_id'], user)
