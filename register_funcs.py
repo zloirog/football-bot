@@ -201,3 +201,4 @@ async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
     confirm_user_registration(match_id, user)
 
     await context.bot.set_message_reaction(chat_id=chat_id, message_id=message_id, reaction="👌")
+    
