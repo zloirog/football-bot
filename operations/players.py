@@ -2,8 +2,8 @@
 from operations.common import execute_query, fetch_query
 
 
-def create_player(nickname, name):
-    return execute_query("INSERT INTO Players (nickname, name) VALUES (?, ?)", (nickname, name))
+def create_player(id, nickname, name):
+    return execute_query("INSERT INTO Players (id, nickname, name) VALUES (?, ?, ?)", (id, nickname, name))
 
 # Read
 def get_player(nickname):
@@ -14,5 +14,5 @@ def update_player(nickname, name):
     execute_query("UPDATE Players SET name = ? WHERE nickname = ?", (name, nickname))
 
 # Delete
-def delete_player(nickname):
-    execute_query("DELETE FROM Players WHERE nickname = ?", (nickname,))
+def delete_player(id):
+    execute_query("DELETE FROM Players WHERE id = ?", (id))

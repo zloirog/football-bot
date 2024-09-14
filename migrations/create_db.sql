@@ -1,5 +1,6 @@
 -- CREATE TABLE Players (
---     nickname VARCHAR(255) PRIMARY KEY,
+--     id VARCHAR(255) PRIMARY KEY
+--     nickname VARCHAR(255),
 --     name VARCHAR(255)
 -- );
 
@@ -7,7 +8,6 @@ CREATE TABLE Players_Notifications (
     notification_id INTEGER PRIMARY KEY,
     nickname VARCHAR(255),
     chat_id VARCHAR(255),
-    -- FOREIGN KEY (nickname) REFERENCES Players(nickname),
     FOREIGN KEY (chat_id) REFERENCES Chats(chat_id)
 );
 
@@ -38,8 +38,6 @@ CREATE TABLE Match_Registration (
     confirmed BOOLEAN,
     priority INT,
     registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    -- FOREIGN KEY (nickname) REFERENCES Players(nickname),
-    -- FOREIGN KEY (registered_by) REFERENCES Players(nickname),
     FOREIGN KEY (match_id) REFERENCES Matches(match_id)
 );
 
@@ -47,5 +45,4 @@ CREATE TABLE Bans (
     ban_id INTEGER PRIMARY KEY,
     nickname VARCHAR(255),
     until TIMESTAMP
-    -- FOREIGN KEY (nickname) REFERENCES Players(nickname)
 );

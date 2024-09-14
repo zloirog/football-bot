@@ -50,6 +50,9 @@ async def last_match(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     message = f"<b>Last Match Players for the game {last_match[0]['datetime']}:</b>\n"
     for idx, player in enumerate(last_match):
+        if idx == 14:
+            message += "\n<b>Waiting List:</b>\n"
+
         message += f"{idx + 1}. @{player['nickname']}\n"
 
     await update.message.reply_text(message, parse_mode=ParseMode.HTML)

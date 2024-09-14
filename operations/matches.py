@@ -22,7 +22,7 @@ SELECT om.match_id, om.datetime, mr.nickname, mr.priority
 FROM OrderedMatches om
 JOIN Match_Registration mr ON om.match_id = mr.match_id
 WHERE om.rn = 2
-ORDER BY mr.priority ASC;
+ORDER BY mr.priority ASC, mr.registered_at;
                        """, ((chat_id,)))
 
 def get_current_match(chat_id):
