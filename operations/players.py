@@ -6,6 +6,9 @@ def create_player(id, nickname, name, user_chat_id):
     return execute_query("INSERT INTO Players (player_id, nickname, name, user_chat_id) VALUES (?, ?, ?, ?)", (id, nickname, name, user_chat_id))
 
 # Read
+def get_all_players():
+    return fetch_query("SELECT * FROM Players")
+
 def get_player(nickname):
     return fetch_query("SELECT * FROM Players WHERE nickname = ?", (nickname,))
 
