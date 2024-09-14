@@ -2,8 +2,8 @@
 from operations.common import execute_query, fetch_query
 
 
-def create_player(id, nickname, name):
-    return execute_query("INSERT INTO Players (id, nickname, name) VALUES (?, ?, ?)", (id, nickname, name))
+def create_player(id, nickname, name, user_chat_id):
+    return execute_query("INSERT INTO Players (id, nickname, name, user_chat_id) VALUES (?, ?, ?)", (id, nickname, name, user_chat_id))
 
 # Read
 def get_player(nickname):
