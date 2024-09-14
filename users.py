@@ -1,11 +1,7 @@
 from telegram import Update
 from telegram.ext import CallbackContext, ContextTypes
 
-<<<<<<< HEAD:players.py
-from operations.players import create_user, get_all_users
-=======
 from operations.users import create_user, get_all_users
->>>>>>> 819c4072071e085945e13f489a000c6845ebd1fa:users.py
 from utils import is_chat_admin
 
 async def register_user(update: Update, context: CallbackContext):

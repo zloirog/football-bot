@@ -74,7 +74,7 @@ def main():
     application.add_handler(CommandHandler("get_jobs", get_jobs))
 
     application.add_handler(CommandHandler("register_me", register_user))
-    application.add_handler(CommandHandler("get_all_user", get_all_users))
+    application.add_handler(CommandHandler("get_all_users", get_all_users))
 
     callback_mapping = {
         'register': register_himself,
