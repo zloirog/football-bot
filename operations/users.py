@@ -6,7 +6,7 @@ def create_user(id, nickname, name, user_chat_id):
     return execute_query("INSERT INTO Users (player_id, nickname, name, user_chat_id) VALUES (?, ?, ?, ?)", (id, nickname, name, user_chat_id))
 
 # Read
-def get_all_users():
+def get_all_users_from_db():
     return fetch_query("SELECT * FROM Users")
 
 def get_user(nickname):

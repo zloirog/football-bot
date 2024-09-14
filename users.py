@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import CallbackContext, ContextTypes
 
-from operations.users import create_user, get_all_users
+from operations.users import create_user, get_all_users_from_db
 from utils import is_chat_admin
 
 async def register_user(update: Update, context: CallbackContext):
@@ -23,7 +23,7 @@ async def get_all_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     chat_id = update.effective_chat.id
     
-    players = get_all_users()
+    players = get_all_users_from_db()
     
     message = "Here are the users who have registered in the bot:\n"
     
