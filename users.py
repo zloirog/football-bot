@@ -10,8 +10,8 @@ async def register_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user = get_user(user_id)
     if user:
-        nickname = user[2]
-        name = user[3]
+        nickname = user['nickname']
+        name = user['name']
         await context.bot.send_message(chat_id=chat_id, text=f"You are already registered. Your nickname is {nickname} and name is {name}.")
         return
 
