@@ -1,10 +1,10 @@
 from telegram import Update
 from telegram.ext import CallbackContext, ContextTypes
 
-from operations.users import create_user, get_all_users_from_db, get_user
+from operations.users import create_user, delete_user, get_all_users_from_db, get_user
 from utils import is_chat_admin
 
-async def register_user(update: Update, context: CallbackContext):
+async def register_user(update: Update, context: CallbackContext.DEFAULT_TYPE):
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id
 
@@ -34,11 +34,24 @@ async def get_all_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     chat_id = update.effective_chat.id
     
-    players = get_all_users_from_db()
+    users = get_all_users_from_db()
     
     message = "Here are the users who have registered in the bot:\n"
     
-    for idx, player in enumerate(players, start=1):
-        message += f"{idx}. Name: {player['name']}, Nickname: {player['nickname']}, ID: {player['player_id']}\n"
+    for idx, user in enumerate(users, start=1):
+        message += f"{idx}. Name: {user['name']}, Nickname: {user['nickname']}, ID: {user['player_id']}\n"
         
     await context.bot.send_message(chat_id=chat_id, text=message)
+
+async def delete_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    
+    user = get_user(user_id)
+    if user:
+        try:
+            delete_user(user_id)
+            await context.bot.send_message(chat_id=user['chat_id'], text="You account was delete. From now, you will not be able to register to the games.")
+        except Exception as e:
+            await context.bot.send_message(chat_id=user['chat_id'], text=f"Oops! Something went wrong: {str(e)}")
+    else: 
+        await context.bot.send_message(chat_id=user_id, text="You are not registered.")

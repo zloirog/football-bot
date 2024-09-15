@@ -5,7 +5,7 @@ from telegram.ext import Application, CallbackQueryHandler, CommandHandler, Call
 from bans import ban, get_all_bans_command, get_my_bans, unban
 from date_utils import get_next_weekday, get_current_time
 from operations.chats import get_all_chats
-from users import get_all_users, register_user
+from users import delete_account, get_all_users, register_user
 from utils import refresh_message, show_registration_message, last_match
 from register_funcs import register_himself, register_another_from_chat, register_plus_one, confirm
 from remove_funcs import remove, remove_other_plus_one, remove_plus_one, remove_other
@@ -76,6 +76,8 @@ def main():
     application.add_handler(CommandHandler("start", register_user))
     application.add_handler(CommandHandler("register_me", register_user))
     application.add_handler(CommandHandler("get_all_users", get_all_users))
+    application.add_handler(CommandHandler("delete_my_account", delete_account))
+    
 
     callback_mapping = {
         'register': register_himself,
