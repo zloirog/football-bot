@@ -9,8 +9,8 @@ def create_user(id, nickname, name, user_chat_id):
 def get_all_users_from_db():
     return fetch_query("SELECT * FROM Users")
 
-def get_user(nickname):
-    return fetch_query("SELECT * FROM Users WHERE nickname = ?", (nickname,))
+def get_user(id):
+    return fetch_query("SELECT * FROM Users WHERE id = ?", (id,))
 
 # Update
 def update_user(nickname, name):

@@ -54,7 +54,7 @@ def initiate(application):
 def main():
     application = Application.builder().token(TOKEN).build()
 
-    application.add_handler(CommandHandler("start", start_repeating_job))
+    application.add_handler(CommandHandler("start_repeating_job", start_repeating_job))
     application.add_handler(CommandHandler("stop", stop_repeating_job))
     application.add_handler(CommandHandler("ban", ban))
     application.add_handler(CommandHandler("unban", unban))
@@ -73,6 +73,7 @@ def main():
     application.add_handler(CommandHandler("confirm", confirm))
     application.add_handler(CommandHandler("get_jobs", get_jobs))
 
+    application.add_handler(CommandHandler("start", register_user))
     application.add_handler(CommandHandler("register_me", register_user))
     application.add_handler(CommandHandler("get_all_users", get_all_users))
 
