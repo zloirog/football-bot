@@ -1,10 +1,10 @@
 from telegram import Update
-from telegram.ext import CallbackContext, ContextTypes
+from telegram.ext import ContextTypes
 
 from operations.users import create_user, delete_user, get_all_users_from_db, get_user
 from utils import is_chat_admin
 
-async def register_user(update: Update, context: CallbackContext.DEFAULT_TYPE):
+async def register_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id
 
