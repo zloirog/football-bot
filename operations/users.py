@@ -10,7 +10,7 @@ def get_all_users_from_db():
     return fetch_query("SELECT * FROM Users")
 
 def get_user(id):
-    return fetch_query("SELECT * FROM Users WHERE id = ?", (id,))
+    return fetch_query("SELECT * FROM Users WHERE player_id = ?", (id,))
 
 # Update
 def update_user(nickname, name):
