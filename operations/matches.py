@@ -18,7 +18,7 @@ WITH OrderedMatches AS (
     FROM Matches m
     WHERE m.chat_id = ?
 )
-SELECT om.match_id, om.datetime, mr.nickname, mr.priority
+SELECT om.match_id, om.datetime, mr.user_id, mr.priority
 FROM OrderedMatches om
 JOIN Match_Registration mr ON om.match_id = mr.match_id
 WHERE om.rn = 2
@@ -33,7 +33,7 @@ WHERE m.match_id = (SELECT MAX(match_id) FROM Matches m WHERE m.chat_id = ?)
                        """, ((chat_id,)))
 
 
-def was_in_last_match(chat_id, nickname):
+def was_in_last_match(chat_id, user_id):
     data = fetch_one_query("""
 WITH OrderedMatches AS (
     SELECT m.match_id,
@@ -43,17 +43,17 @@ WITH OrderedMatches AS (
 ),
 First14Registrations AS (
     SELECT mr.match_id,
-           mr.nickname,
+           mr.user_id,
            ROW_NUMBER() OVER (PARTITION BY mr.match_id ORDER BY mr.priority) AS rn
     FROM Match_Registration mr
 )
-SELECT f14r.nickname
+SELECT f14r.user_id
 FROM First14Registrations f14r
 JOIN OrderedMatches om ON f14r.match_id = om.match_id
 WHERE om.rn = 2
 AND f14r.rn <= 14
-AND f14r.nickname = ?;
-                           """, (chat_id, nickname))
+AND f14r.user_id = ?;
+                           """, (chat_id, user_id))
     if data is None:
         return False
     else:
