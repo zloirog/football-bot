@@ -1,5 +1,5 @@
 # Create
-from operations.common import execute_query, fetch_query
+from operations.common import execute_query, fetch_one_query, fetch_query
 
 
 def create_user(id, nickname, name, user_chat_id):
@@ -10,7 +10,7 @@ def get_all_users_from_db():
     return fetch_query("SELECT * FROM Users")
 
 def get_user(id):
-    return fetch_query("SELECT * FROM Users WHERE player_id = ?", (id,))
+    return fetch_one_query("SELECT * FROM Users WHERE player_id = ?", (id,))
 
 # Update
 def update_user(nickname, name):
