@@ -26,7 +26,7 @@ ORDER BY mr.priority ASC, mr.registered_at;
                        """, ((chat_id,)))
 
 def get_current_match(chat_id):
-    return fetch_query("""
+    return fetch_one_query("""
 SELECT *
 FROM Matches m
 WHERE m.match_id = (SELECT MAX(match_id) FROM Matches m WHERE m.chat_id = ?)

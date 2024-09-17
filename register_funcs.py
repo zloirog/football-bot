@@ -8,10 +8,10 @@ from telegram.constants import ParseMode
 from telegram.ext import CallbackContext, ContextTypes
 from constants import DATETIME_FORMAT, PRIORITY_HOURS, SQL_DATETIME_FORMAT, reply_markup
 from operations.matches import get_current_match, was_in_last_match
-from operations.users import get_user_by_nickname
+from operations.users import get_user, get_user_by_nickname
 
 def get_message(chat_id):
-    current_match = get_current_match(chat_id)[0]
+    current_match = get_current_match(chat_id)
     current_match_registrations = get_current_match_registrations(chat_id)
 
     game_time_frmt = datetime.strptime(current_match['datetime'], DATETIME_FORMAT).strftime("%d.%m.%Y %H:%M")
@@ -45,7 +45,7 @@ async def check_for_confimation(context: ContextTypes.DEFAULT_TYPE):
     chat_id = job_data['chat_id']
     player_id = job_data['player_id']
 
-    curr_match = get_current_match(chat_id)[0]
+    curr_match = get_current_match(chat_id)
 
     is_user_registered = check_if_user_registered(curr_match['match_id'], player_id)
 
@@ -131,32 +131,20 @@ async def register_himself(update: Update, context: CallbackContext):
     return
 
 async def register_plus_one(update: Update, context: CallbackContext):
-    user = update.callback_query.from_user.username
+    user_id = update.callback_query.from_user.id
     chat_id = update.effective_chat.id
+    
+    # Send message to user
+    if not user_id:
+        user_id = update.callback_query.from_user.first_name
 
-    if not user:
-        user = update.callback_query.from_user.first_name
-
-    player = user + " +1"
-    res = register_core(chat_id, player, user, True)
+    player = user_id + " +1"
+    res = register_core(chat_id, player, user_id, True)
 
     if res:
         query = update.callback_query
         await query.edit_message_text(text=get_message(chat_id), reply_markup=reply_markup, parse_mode=ParseMode.HTML)
     return
-
-def can_user_register(player, players):
-    himself = True
-    from_chat = True
-    plus_one = True
-    for obj in players:
-        if obj['name'] == player and obj['registered_by'] == player:
-            himself = False
-        if obj['name'] != player and obj['registered_by'] == player:
-            from_chat = False
-        if obj['registered_by'] == player and obj['is_plus'] == True:
-            plus_one = False
-    return {"himself": himself, "from_chat": from_chat, "plus_one": plus_one}
 
 def registered(current_match):
     if len(current_match) == 0:
@@ -168,8 +156,9 @@ def registered(current_match):
     for idx, match_registration in enumerate(current_match):
         if idx == 14:
             message += "\n<b>Waiting List:</b>\n"
+        player = get_user(match_registration['user_id'])
 
-        message += f"{idx + 1}. @{match_registration['nickname']} <i>(Priority {match_registration['priority']})</i>"
+        message += f"{idx + 1}. @{player['nickname']} - {player['name']} <i>(Priority {match_registration['priority']})</i>"
         if not match_registration['confirmed']:
             message += "<i> Not confirmed</i>"
         message += "\n"
@@ -178,13 +167,13 @@ def registered(current_match):
 
 async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
-    user = update.message.from_user.username
+    user_id = update.message.from_user.id
     message_id = update.message.id
 
     res = get_current_match(chat_id)
-    current_match = res[0]
+    current_match = res
     match_id = current_match['match_id']
 
-    confirm_user_registration(match_id, user)
+    confirm_user_registration(match_id, user_id)
 
     await context.bot.set_message_reaction(chat_id=chat_id, message_id=message_id, reaction="👌")

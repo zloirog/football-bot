@@ -25,7 +25,7 @@ async def ban(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=chat_id, text="Please provide a valid username to ban.")
         return
 
-    current_match = get_current_match(chat_id)[0]
+    current_match = get_current_match(chat_id)
     datetime_parsed = datetime.strptime(current_match['datetime'], DATETIME_FORMAT)
 
     ten_days = timedelta(days=10)
