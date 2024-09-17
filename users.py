@@ -7,6 +7,11 @@ from utils import is_chat_admin
 async def register_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id
+    
+    if user_id != chat_id:
+        await context.bot.send_message(chat_id=chat_id, text=f"Please, register in DM of the bot.")
+        return
+        
 
     user = get_user(user_id)
     if user:
@@ -21,7 +26,7 @@ async def register_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     name = f"{first_name} {last_name}" if first_name or last_name else nickname
 
     try:
-        create_user(user_id, nickname, name, chat_id)
+        create_user(user_id, nickname, name)
         await context.bot.send_message(chat_id=chat_id, text="Thank you for registering.")
     except Exception as e:
         await context.bot.send_message(chat_id=chat_id, text=f"Oops! Something went wrong: {str(e)}")

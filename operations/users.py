@@ -3,7 +3,7 @@ from operations.common import execute_query, fetch_one_query, fetch_query
 
 
 def create_user(id, nickname, name, user_chat_id):
-    return execute_query("INSERT INTO Users (user_id, nickname, name, user_chat_id) VALUES (?, ?, ?, ?)", (id, nickname, name, user_chat_id))
+    return execute_query("INSERT INTO Users (user_id, nickname, name) VALUES (?, ?, ?, ?)", (id, nickname, name))
 
 # Read
 def get_all_users_from_db():
