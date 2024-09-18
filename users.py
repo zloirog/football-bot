@@ -32,7 +32,6 @@ async def register_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=chat_id, text=f"Oops! Something went wrong: {str(e)}")
 
 
-
 async def get_all_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await is_chat_admin(update, context):
         return
@@ -44,7 +43,7 @@ async def get_all_users(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = "Here are the users who have registered in the bot:\n"
     
     for idx, user in enumerate(users, start=1):
-        message += f"{idx}. Name: {user['name']}, Nickname: {user['nickname']}, ID: {user['player_id']}\n"
+        message += f"{idx}. Name: {user['name']}, Nickname: @{user['nickname']}, ID: {user['user_id']}\n"
         
     await context.bot.send_message(chat_id=chat_id, text=message)
 

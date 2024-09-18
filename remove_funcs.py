@@ -2,21 +2,20 @@ from datetime import datetime, timedelta
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
-from constants import DATETIME_FORMAT, reply_markup
+from constants import DATETIME_FORMAT
 from date_utils import get_hours_until_match
 from operations.bans import create_ban
-from operations.match_registrations import delete_match_plus_one_registration, delete_match_registration, get_current_match_registrations
+from operations.match_registrations import delete_match_plus_one_registration, delete_match_registration
 from operations.matches import get_current_match
 from operations.users import get_user, get_user_by_nickname
-from utils import is_chat_admin
-from register_funcs import get_message
-
-async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
+from utils import get_reply_markup, is_chat_admin
+from utils import get_message
+    
+async def remove_from_dm(update: Update, context: ContextTypes.DEFAULT_TYPE, chat_id):
     user_id = update.callback_query.from_user.id
-    chat_id = update.effective_chat.id
     query = update.callback_query
 
-    current_match = get_current_match_registrations(chat_id)
+    current_match = get_current_match(chat_id)
 
     datetime_parsed = datetime.strptime(current_match['datetime'], DATETIME_FORMAT)
 
@@ -32,17 +31,14 @@ async def remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
     delete_match_registration(current_match['match_id'], user_id)
 
     try:
-        await query.edit_message_text(text=get_message(chat_id), reply_markup=reply_markup, parse_mode=ParseMode.HTML)
+        await query.edit_message_text(text=get_message(chat_id), reply_markup=get_reply_markup(chat_id), parse_mode=ParseMode.HTML)
     except Exception as error:
-        print("No update", error)
+        print("Error!", error)
         return
 
-async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE, chat_id):
     user_id = update.callback_query.from_user.id
-    chat_id = update.effective_chat.id
-    query = update.callback_query
-
-    current_match = get_current_match_registrations(chat_id)
+    current_match = get_current_match(chat_id)
 
     hours_difference = get_hours_until_match(current_match['datetime'])
     
@@ -51,10 +47,10 @@ async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if hours_difference < 22:
         await context.bot.send_message(chat_id, text=f"@{user['nickname']} - {user['name']}, your plus one has been removed as it was cancelled less than 20 hours before the match.")
 
-    delete_match_plus_one_registration(current_match['match_id'], user_id)
+    removed_user_id = delete_match_plus_one_registration(current_match['match_id'], user_id)
 
     try:
-        await query.edit_message_text(text=get_message(chat_id), reply_markup=reply_markup, parse_mode=ParseMode.HTML)
+        await context.bot.send_message(chat_id=removed_user_id, text=f"You have been removed from the match registration by @{user['nickname']} - {user['name']}")
     except Exception as error:
         print("No update", error)
         return

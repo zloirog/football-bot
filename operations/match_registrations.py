@@ -66,4 +66,6 @@ def delete_match_registration(match_id, user_id):
     execute_query("DELETE FROM Match_Registration WHERE user_id = ? AND match_id = ?", (user_id, match_id))
 
 def delete_match_plus_one_registration(match_id, user_id):
-    execute_query("DELETE FROM Match_Registration WHERE registered_by_id = ? AND match_id = ? AND is_plus = 1", (user_id, match_id))
+    removed_user_id = fetch_one_query("SELECT user_id FROM Match_Registration WHERE registered_by_id = ? AND match_id = ? AND is_plus = 1", (user_id, match_id))
+    execute_query("DELETE FROM Match_Registration WHERE registered_by_id = ? AND match_id = ? AND is_plus = 1", ((user_id, match_id)))
+    return removed_user_id
