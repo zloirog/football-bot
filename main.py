@@ -8,10 +8,8 @@ from operations.chats import get_all_chats
 from users import delete_account, get_all_users, register_user
 from utils import refresh_message, show_registration_message, last_match
 from register_funcs import register_himself, register_another_from_chat, register_plus_one, confirm
-from remove_funcs import remove, remove_other_plus_one, remove_plus_one, remove_other
+from remove_funcs import remove_from_dm, remove_other_plus_one, remove_plus_one, remove_other
 from jobs_funcs import get_jobs, start_repeating_job, stop_repeating_job, start
-from constants import reply_markup
-
 
 TOKEN = os.getenv("TG_TOKEN")
 
@@ -65,7 +63,6 @@ def main():
     application.add_handler(CommandHandler(
         "show_registration_message", show_registration_message))
 
-    application.add_handler(CommandHandler("register_another_from_chat", register_another_from_chat))
     application.add_handler(CommandHandler("last_match", last_match))
     application.add_handler(CommandHandler("remove_other", remove_other))
     application.add_handler(CommandHandler("remove_other_plus_one", remove_other_plus_one))
@@ -81,40 +78,76 @@ def main():
 
     callback_mapping = {
         'register': register_himself,
-        'register_plus_one': register_plus_one,
-        'quit_confirm': remove,
-        'refresh_message': refresh_message,
-        'remove_plus_one_confirm': remove_plus_one
+        'registeranother': register_another_from_chat,
+        'refreshmessage': refresh_message,
     }
+    
+    def parse_callback_data(data):
+        parts = data.split('_')
+        if len(parts) == 3:
+            action, chat_id, user_id = parts
+            return action, chat_id, user_id
+        elif len(parts) == 2:
+            action, chat_id = parts
+            return action, chat_id
+        elif len(parts) == 1:
+            action = parts[0]
+            return action,
+        else:
+            raise ValueError("Invalid data format")
+
 
     async def callback_query_handler(update: Update, context: CallbackContext) -> None:
         query = update.callback_query
-        # Get the callback data
-        data = query.data
-        if data == 'quit':
+        print(query.data)
+        parsed_callback_data = parse_callback_data(query.data)
+        action = parsed_callback_data[0]
+        
+        if action == 'quit':
+            user_id = update.callback_query.from_user.id
+            
             keyboard = [
                 [InlineKeyboardButton(
-                    "Yes, confirm quit", callback_data='quit_confirm')],
-                [InlineKeyboardButton("No, cancel", callback_data='cancel')],
+                    "Yes, confirm quit", callback_data=f'removefromdm_')],
             ]
             confirm_reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_reply_markup(reply_markup=confirm_reply_markup)
+            await context.bot.send_message(chat_id=user_id, text="Do you want to quit?", reply_markup=confirm_reply_markup)
 
-        if data == 'remove_plus_one':
+        if action == 'removeplusone':
+            chat_id = parsed_callback_data[1]
+            user_id = update.callback_query.from_user.id
+            
             keyboard = [
                 [InlineKeyboardButton(
-                    "Yes, confirm quit for  ➕ 1️⃣", callback_data='remove_plus_one_confirm')],
-                [InlineKeyboardButton("No, cancel", callback_data='cancel')],
+                    "Yes, confirm quit for  ➕ 1️⃣", callback_data=f'removeplusoneconfirm_{chat_id}')],
             ]
             confirm_reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_reply_markup(reply_markup=confirm_reply_markup)
-
-        if data == 'cancel':
-            await query.edit_message_reply_markup(reply_markup=reply_markup)
+            await context.bot.send_message(chat_id=user_id, text="Do you want to remove yours plus one?", reply_markup=confirm_reply_markup)
+            
+        if action == 'removeplusoneconfirm':
+            chat_id = parsed_callback_data[1]
+            user_id = update.callback_query.from_user.id
+            
+            await remove_plus_one(update, context, chat_id)
+            await context.bot.send_message(chat_id=user_id, text="Removed.")
+        
+        if action == 'confirm':
+            chat_id = parsed_callback_data[1]
+            await confirm(update, context, chat_id)
+            
+        if action == 'removefromdm':
+            chat_id = parsed_callback_data[1]
+            await remove_from_dm(update, context, chat_id)
+            
+        if action == 'registerplusone':
+            chat_id = parsed_callback_data[1]
+            user_id = parsed_callback_data[2]
+            
+            await register_plus_one(update, context, chat_id, user_id)
 
         # Call the corresponding function
-        if data in callback_mapping:
-            await callback_mapping[data](update, context)
+        if action in callback_mapping:
+            await callback_mapping[action](update, context)
 
     application.add_handler(CallbackQueryHandler(callback_query_handler))
 

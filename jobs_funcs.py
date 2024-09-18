@@ -1,8 +1,8 @@
 from operations.chats import create_chat, delete_chat, get_chat
 from operations.matches import create_match
-from utils import is_chat_admin
+from utils import get_reply_markup, is_chat_admin
 from date_utils import get_next_weekday, get_current_time
-from constants import reply_markup, DATETIME_FORMAT
+from constants import  DATETIME_FORMAT
 
 from telegram import Update
 from telegram.ext import CallbackContext
@@ -28,7 +28,7 @@ async def start(context: CallbackContext):
 
     formatted_game_time = next_match_datetime.strftime("%d.%m.%Y %H:%M")
 
-    sent_message = await context.bot.send_message(chat_id=chat_id, text=f"Registration is now open! \nGame time: {formatted_game_time}", reply_markup=reply_markup)
+    sent_message = await context.bot.send_message(chat_id=chat_id, text=f"Registration is now open! \nGame time: {formatted_game_time}", reply_markup=get_reply_markup(chat_id))
     await context.bot.pin_chat_message(chat_id=chat_id, message_id=sent_message.message_id)
 
 async def start_repeating_job(update: Update, context: CallbackContext):

@@ -2,12 +2,12 @@
 from operations.common import execute_query, fetch_one_query, fetch_query
 
 
-def create_user(id, nickname, name, user_chat_id):
-    return execute_query("INSERT INTO Users (user_id, nickname, name) VALUES (?, ?, ?, ?)", (id, nickname, name))
+def create_user(id, nickname, name):
+    return execute_query("INSERT INTO Users (user_id, nickname, name) VALUES (?, ?, ?)", (id, nickname, name))
 
 # Read
 def get_all_users_from_db():
-    return fetch_query("SELECT * FROM Users")
+    return fetch_query("SELECT * FROM Users ORDER BY nickname")
 
 def get_user(id):
     return fetch_one_query("SELECT * FROM Users WHERE user_id = ?", (id,))
