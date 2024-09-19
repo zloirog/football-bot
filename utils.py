@@ -50,7 +50,11 @@ def registered(current_match):
         if idx == 14:
             message += "\n<b>Waiting List:</b>\n"
         player = get_user(match_registration['user_id'])
-
+        
+        if player == None:
+            message += f"{idx + 1}. Этот чубзик так и не удосужился запустить бота \n"
+            continue
+            
         message += f"{idx + 1}. @{player['nickname']} - {player['name']} <i>(Priority {match_registration['priority']})</i>"
         
         if match_registration['is_plus']:
