@@ -1,11 +1,3 @@
--- Migration to drop user_chat_id property from Users table
-ALTER TABLE Users
-DROP COLUMN user_chat_id;
-
--- Rename the player_id column to user_id in the Users table
-ALTER TABLE Users
-RENAME COLUMN player_id TO user_id;
-
 -- Add the user_id column to the Players_Notifications table with a foreign key constraint
 ALTER TABLE Players_Notifications
 ADD COLUMN user_id INTEGER REFERENCES Users(user_id);
