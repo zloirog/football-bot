@@ -6,7 +6,7 @@ from operations.match_registrations import check_if_user_registered, confirm_use
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ParseMode
 from telegram.ext import CallbackContext, ContextTypes
-from constants import DATETIME_FORMAT, PRIORITY_HOURS, SQL_DATETIME_FORMAT
+from constants import PRIORITY_HOURS, SQL_DATETIME_FORMAT
 from operations.matches import get_current_match, was_in_last_match
 from operations.users import get_all_users_from_db, get_user, get_user_by_nickname
 from utils import get_reply_markup, is_user_in_chat, get_message
@@ -64,7 +64,17 @@ async def register_another_from_chat(update: Update, context: CallbackContext):
     keyboard = []
     
     for idx, user in enumerate(users, start=1):
-        keyboard.append([InlineKeyboardButton(f"{user['name']} @{user['nickname']}", callback_data=f"registerplusone_{chat_id}_{user['user_id']}")])
+        next_user = users[(idx) % len(users)]
+        
+        if idx % 2 != 0 and idx == len(users):
+            keyboard.append([InlineKeyboardButton(f"@{next_user['nickname']}", callback_data=f"registerplusone_{chat_id}_{next_user['user_id']}")])
+            continue
+        
+        if idx % 2 != 0: 
+            continue
+        
+        keyboard.append([InlineKeyboardButton(f"@{user['nickname']}", callback_data=f"registerplusone_{chat_id}_{user['user_id']}"), 
+                         InlineKeyboardButton(f"@{next_user['nickname']}", callback_data=f"registerplusone_{chat_id}_{next_user['user_id']}")])
                 
     reply_markup = InlineKeyboardMarkup(keyboard)
         
@@ -91,7 +101,6 @@ def register_core(chat_id, user_id, registered_by_id, is_plus=False, confirmed=T
         return
 
     priority = get_priority(user_id, reg_time, start_time, was_in_last_match_res)
-
     create_result = create_match_registration(user_id, registered_by_id, is_plus, confirmed, priority, match_id)
 
     return create_result
@@ -129,7 +138,7 @@ async def register_plus_one(update: Update, context: CallbackContext, chat_id, u
     current_match = get_current_match(chat_id)
     
     res = register_core(chat_id=chat_id, user_id=user_id, registered_by_id=request_user_id, is_plus=not user_in_chat, confirmed=False)
-
+    
     if res:
         keyboard = [[InlineKeyboardButton("Confirm", callback_data=f'confirm_{chat_id}')]]
         keyboard2 = [[InlineKeyboardButton("Quit", callback_data=f'removefromdm_{chat_id}')]]
@@ -146,7 +155,7 @@ async def register_plus_one(update: Update, context: CallbackContext, chat_id, u
         
         await context.bot.send_message(chat_id=request_user_id, text="User registered, thanks.")
     else:
-        await context.bot.send_message(chat_id=request_user_id, text="Something went wrong, could not register this user. Reach out to admins for help.")
+        await context.bot.send_message(chat_id=request_user_id, text="You cannot register more people.")
 
 async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE, chat_id):
     user_id = update.callback_query.from_user.id

@@ -41,7 +41,7 @@ WITH OrderedMatches AS (
     FROM Matches m
     WHERE m.match_id = (SELECT MAX(match_id) FROM Matches m WHERE m.chat_id = ?)
 )
-SELECT om.match_id, om.datetime, mr.user_id, mr.priority, mr.confirmed, mr.registration_id
+SELECT om.match_id, om.datetime, mr.user_id, mr.priority, mr.is_plus, mr.confirmed, mr.registration_id
 FROM OrderedMatches om
 JOIN Match_Registration mr ON om.match_id = mr.match_id
 ORDER BY mr.priority ASC, mr.registered_at;

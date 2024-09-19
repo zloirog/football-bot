@@ -52,10 +52,14 @@ def registered(current_match):
         player = get_user(match_registration['user_id'])
 
         message += f"{idx + 1}. @{player['nickname']} - {player['name']} <i>(Priority {match_registration['priority']})</i>"
+        
+        if match_registration['is_plus']:
+            message += " ➕ 1️⃣"
+        
         if not match_registration['confirmed']:
             message += "<i> Not confirmed</i>"
         message += "\n"
-
+        
     return message
 
 
@@ -80,8 +84,7 @@ async def is_user_in_chat(update, context, chat_id, user_id):
         else:
             return False
     except BadRequest as e:
-        # User is not in the chat or chat not found
-        if e.message == "User not found":
+        if e.message == "Member not found":
             return False
         else:
             raise e
