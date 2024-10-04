@@ -13,8 +13,8 @@ def get_all_chats():
     return fetch_query("SELECT * FROM Chats")
 
 # Update
-def update_chat(chat_id, name, time, week_day):
-    execute_query("UPDATE Chats SET name = ?, time = ?, week_day = ? WHERE chat_id = ?", (name, time, week_day, (chat_id,)))
+def update_chat(id, chat_id, name, game_time, game_week_day, reg_time, reg_week_day):
+    execute_query("UPDATE Chats SET chat_id = ?, name = ?, game_time = ?, game_week_day = ?, reg_time = ?, reg_week_day = ? WHERE id = ?", (chat_id, name, game_time, game_week_day, reg_time, reg_week_day, id))
 
 # Delete
 def delete_chat(chat_id):

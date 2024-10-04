@@ -1,10 +1,10 @@
 import os
 import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CallbackQueryHandler, CommandHandler, CallbackContext
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, CallbackContext, MessageHandler, filters
 from bans import ban, get_all_bans_command, get_my_bans, unban
 from date_utils import get_next_weekday, get_current_time
-from operations.chats import get_all_chats
+from operations.chats import get_all_chats, get_chat, update_chat
 from users import delete_account, get_all_users, register_user
 from utils import refresh_message, show_registration_message, last_match
 from register_funcs import register_himself, register_another_from_chat, register_plus_one, confirm
@@ -47,10 +47,18 @@ def initiate(application):
             data=job_data,
             name=chat['chat_id']
         )
+        
+def migchat(bot, update):
+    oldchatid = update.message.migrate_from_chat_id
+    newchatid = update.message.chat.id
+    old_chat = get_chat(oldchatid)
+    update_chat(old_chat['id'], newchatid, old_chat['name'], old_chat['game_time'], old_chat['game_week_day'], old_chat['reg_time'], old_chat['reg_week_day'])
 
 # Main function
 def main():
     application = Application.builder().token(TOKEN).build()
+    
+    application.add_handler(MessageHandler(filters.StatusUpdate.MIGRATE, migchat))
 
     application.add_handler(CommandHandler("start_repeating_job", start_repeating_job))
     application.add_handler(CommandHandler("stop", stop_repeating_job))
@@ -58,7 +66,6 @@ def main():
     application.add_handler(CommandHandler("unban", unban))
     application.add_handler(CommandHandler("get_my_bans", get_my_bans))
     application.add_handler(CommandHandler("get_all_bans", get_all_bans_command))
-
 
     application.add_handler(CommandHandler(
         "show_registration_message", show_registration_message))
@@ -74,7 +81,6 @@ def main():
     application.add_handler(CommandHandler("register_me", register_user))
     application.add_handler(CommandHandler("get_all_users", get_all_users))
     application.add_handler(CommandHandler("delete_my_account", delete_account))
-
 
     callback_mapping = {
         'register': register_himself,
@@ -99,7 +105,6 @@ def main():
 
     async def callback_query_handler(update: Update, context: CallbackContext) -> None:
         query = update.callback_query
-        print(query.data)
         parsed_callback_data = parse_callback_data(query.data)
         action = parsed_callback_data[0]
 

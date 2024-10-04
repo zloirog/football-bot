@@ -8,7 +8,7 @@ from telegram.constants import ParseMode
 from telegram.ext import CallbackContext, ContextTypes
 from constants import PRIORITY_HOURS, SQL_DATETIME_FORMAT
 from operations.matches import get_current_match, was_in_last_match
-from operations.users import get_all_users_from_db, get_user, get_user_by_nickname
+from operations.users import get_all_users_from_db, get_user
 from utils import get_reply_markup, is_user_in_chat, get_message
 
 def is_player_banned(user_id):
@@ -33,10 +33,10 @@ async def check_for_confimation(context: ContextTypes.DEFAULT_TYPE):
     curr_match = get_current_match(chat_id)
 
     is_user_registered = check_if_user_registered(curr_match['match_id'], user_id)
-
+    
     if is_user_registered['confirmed'] == 0:
         delete_match_registration(curr_match['match_id'], user_id)
-        await context.bot.send_message(chat_id=chat_id, text=f"@{user_id} did not confirm their registration!")
+        await context.bot.send_message(chat_id=chat_id, text=f"@{is_user_registered['nickname']} did not confirm their registration!")
         return
 
 def get_priority(user_id, reg_time, game_time, was_in_last_match):
@@ -67,14 +67,14 @@ async def register_another_from_chat(update: Update, context: CallbackContext):
         next_user = users[(idx) % len(users)]
         
         if idx % 2 != 0 and idx == len(users):
-            keyboard.append([InlineKeyboardButton(f"@{next_user['nickname']}", callback_data=f"registerplusone_{chat_id}_{next_user['user_id']}")])
+            keyboard.append([InlineKeyboardButton(f"{next_user['name']}", callback_data=f"registerplusone_{chat_id}_{next_user['user_id']}")])
             continue
         
         if idx % 2 != 0: 
             continue
         
-        keyboard.append([InlineKeyboardButton(f"@{user['nickname']}", callback_data=f"registerplusone_{chat_id}_{user['user_id']}"), 
-                         InlineKeyboardButton(f"@{next_user['nickname']}", callback_data=f"registerplusone_{chat_id}_{next_user['user_id']}")])
+        keyboard.append([InlineKeyboardButton(f"{user['name']}", callback_data=f"registerplusone_{chat_id}_{user['user_id']}"), 
+                         InlineKeyboardButton(f"{next_user['name']}", callback_data=f"registerplusone_{chat_id}_{next_user['user_id']}")])
                 
     reply_markup = InlineKeyboardMarkup(keyboard)
         
@@ -94,11 +94,14 @@ def register_core(chat_id, user_id, registered_by_id, is_plus=False, confirmed=T
     if is_user_registered and is_user_registered['confirmed'] == 0:
         confirm_user_registration(match_id, user_id)
         return True
+    
+    if is_user_registered: 
+        return False
 
     hours_until_match = get_hours_until_match(current_match['datetime'])
 
     if hours_until_match < 0:
-        return
+        return False
 
     priority = get_priority(user_id, reg_time, start_time, was_in_last_match_res)
     create_result = create_match_registration(user_id, registered_by_id, is_plus, confirmed, priority, match_id)

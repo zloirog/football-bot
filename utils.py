@@ -8,7 +8,6 @@ from telegram.error import BadRequest
 
 from constants import DATETIME_FORMAT
 from telegram.constants import ParseMode
-from operations.users import get_user
 
 def get_reply_markup(chat_id):
     keyboard = [
@@ -49,13 +48,12 @@ def registered(current_match):
     for idx, match_registration in enumerate(current_match):
         if idx == 14:
             message += "\n<b>Waiting List:</b>\n"
-        player = get_user(match_registration['user_id'])
 
-        if player == None:
+        if match_registration == None:
             message += f"{idx + 1}. Этот чубзик так и не удосужился запустить бота \n"
             continue
 
-        message += f"{idx + 1}. @{player['nickname']} - {player['name']} <i>(Priority {match_registration['priority']})</i>"
+        message += f"{idx + 1}. @{match_registration['nickname']} - {match_registration['name']} <i>(P{match_registration['priority']})</i>"
 
         if match_registration['is_plus']:
             message += " ➕ 1️⃣"
@@ -126,9 +124,9 @@ async def last_match(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     message = f"<b>Last Match Players for the game {last_match[0]['datetime']}:</b>\n"
     for idx, player in enumerate(last_match):
-        if idx == 15:
+        if idx == 14:
             break
 
-        message += f"{idx + 1}. @{player['nickname']}\n"
+        message += f"{idx + 1}. @{player['nickname']} {player['name']}\n"
 
     await update.message.reply_text(message, parse_mode=ParseMode.HTML)
