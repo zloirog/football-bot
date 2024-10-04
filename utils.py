@@ -6,7 +6,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, ChatMem
 from telegram.ext import ContextTypes, CallbackContext
 from telegram.error import BadRequest
 
-from constants import  DATETIME_FORMAT
+from constants import DATETIME_FORMAT
 from telegram.constants import ParseMode
 from operations.users import get_user
 
@@ -19,7 +19,7 @@ def get_reply_markup(chat_id):
         [InlineKeyboardButton("Refresh 🔄", callback_data='refreshmessage')],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    
+
     return reply_markup
 
 
@@ -50,20 +50,20 @@ def registered(current_match):
         if idx == 14:
             message += "\n<b>Waiting List:</b>\n"
         player = get_user(match_registration['user_id'])
-        
+
         if player == None:
             message += f"{idx + 1}. Этот чубзик так и не удосужился запустить бота \n"
             continue
-            
+
         message += f"{idx + 1}. @{player['nickname']} - {player['name']} <i>(Priority {match_registration['priority']})</i>"
-        
+
         if match_registration['is_plus']:
             message += " ➕ 1️⃣"
-        
+
         if not match_registration['confirmed']:
             message += "<i> Not confirmed</i>"
         message += "\n"
-        
+
     return message
 
 
@@ -97,7 +97,7 @@ async def is_user_in_chat(update, context, chat_id, user_id):
 async def refresh_message(update: Update, context: CallbackContext):
     query = update.callback_query
     chat_id = update.effective_chat.id
-    
+
     try:
         await query.edit_message_text(text=get_message(chat_id), reply_markup=get_reply_markup(chat_id), parse_mode=ParseMode.HTML)
         return
@@ -128,7 +128,7 @@ async def last_match(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for idx, player in enumerate(last_match):
         if idx == 15:
             break
-        
+
         message += f"{idx + 1}. @{player['nickname']}\n"
 
     await update.message.reply_text(message, parse_mode=ParseMode.HTML)

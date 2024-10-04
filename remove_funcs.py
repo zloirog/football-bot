@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 from telegram import Update
-from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 from constants import DATETIME_FORMAT
 from date_utils import get_hours_until_match
@@ -8,9 +7,9 @@ from operations.bans import create_ban
 from operations.match_registrations import delete_match_plus_one_registration, delete_match_registration
 from operations.matches import get_current_match
 from operations.users import get_user, get_user_by_nickname
-from utils import get_reply_markup, is_chat_admin
-from utils import get_message
-    
+from utils import is_chat_admin
+from bans import ban_func
+
 async def remove_from_dm(update: Update, context: ContextTypes.DEFAULT_TYPE, chat_id):
     user_id = update.callback_query.from_user.id
     query = update.callback_query
@@ -31,7 +30,7 @@ async def remove_from_dm(update: Update, context: ContextTypes.DEFAULT_TYPE, cha
     delete_match_registration(current_match['match_id'], user_id)
 
     try:
-        await query.edit_message_text(text=get_message(chat_id), reply_markup=get_reply_markup(chat_id), parse_mode=ParseMode.HTML)
+        await query.edit_message_text(text="Thank you for the confirmation.")
     except Exception as error:
         print("Error!", error)
         return
@@ -41,18 +40,19 @@ async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE, ch
     current_match = get_current_match(chat_id)
 
     hours_difference = get_hours_until_match(current_match['datetime'])
-    
+
     user = get_user(user_id)
 
     if hours_difference < 22:
-        await context.bot.send_message(chat_id, text=f"@{user['nickname']} - {user['name']}, your plus one has been removed as it was cancelled less than 20 hours before the match.")
+        ban_func(chat_id, user_id)
+        await context.bot.send_message(chat_id, text=f"@{user['nickname']} - {user['name']}, your plus one has been banned as it was removed less than 20 hours before the match.")
 
     removed_user_id = delete_match_plus_one_registration(current_match['match_id'], user_id)
 
     try:
         await context.bot.send_message(chat_id=removed_user_id, text=f"You have been removed from the match registration by @{user['nickname']} - {user['name']}")
     except Exception as error:
-        print("No update", error)
+        print("Error: ", error)
         return
 
 async def remove_other(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -86,7 +86,7 @@ async def remove_other_plus_one(update: Update, context: ContextTypes.DEFAULT_TY
 
     if len(context.args) == 1 and context.args[0].startswith('@'):
         user_nickname = context.args[0][1:]
-        user = get_user_by_nickname(user_nickname)  
+        user = get_user_by_nickname(user_nickname)
         if not user:
             await context.bot.send_message(chat_id=chat_id, text="This user is not registered in bot.")
     else:

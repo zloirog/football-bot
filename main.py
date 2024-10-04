@@ -74,14 +74,14 @@ def main():
     application.add_handler(CommandHandler("register_me", register_user))
     application.add_handler(CommandHandler("get_all_users", get_all_users))
     application.add_handler(CommandHandler("delete_my_account", delete_account))
-    
+
 
     callback_mapping = {
         'register': register_himself,
         'registeranother': register_another_from_chat,
         'refreshmessage': refresh_message,
     }
-    
+
     def parse_callback_data(data):
         parts = data.split('_')
         if len(parts) == 3:
@@ -102,13 +102,14 @@ def main():
         print(query.data)
         parsed_callback_data = parse_callback_data(query.data)
         action = parsed_callback_data[0]
-        
+
         if action == 'quit':
+            chat_id = parsed_callback_data[1]
             user_id = update.callback_query.from_user.id
-            
+
             keyboard = [
                 [InlineKeyboardButton(
-                    "Yes, confirm quit", callback_data=f'removefromdm_')],
+                    "Yes, confirm quit", callback_data=f'removefromdm_{chat_id}')],
             ]
             confirm_reply_markup = InlineKeyboardMarkup(keyboard)
             await context.bot.send_message(chat_id=user_id, text="Do you want to quit?", reply_markup=confirm_reply_markup)
@@ -116,33 +117,33 @@ def main():
         if action == 'removeplusone':
             chat_id = parsed_callback_data[1]
             user_id = update.callback_query.from_user.id
-            
+
             keyboard = [
                 [InlineKeyboardButton(
                     "Yes, confirm quit for  ➕ 1️⃣", callback_data=f'removeplusoneconfirm_{chat_id}')],
             ]
             confirm_reply_markup = InlineKeyboardMarkup(keyboard)
             await context.bot.send_message(chat_id=user_id, text="Do you want to remove yours plus one?", reply_markup=confirm_reply_markup)
-            
+
         if action == 'removeplusoneconfirm':
             chat_id = parsed_callback_data[1]
             user_id = update.callback_query.from_user.id
-            
+
             await remove_plus_one(update, context, chat_id)
             await context.bot.send_message(chat_id=user_id, text="Removed.")
-        
+
         if action == 'confirm':
             chat_id = parsed_callback_data[1]
             await confirm(update, context, chat_id)
-            
+
         if action == 'removefromdm':
             chat_id = parsed_callback_data[1]
             await remove_from_dm(update, context, chat_id)
-            
+
         if action == 'registerplusone':
             chat_id = parsed_callback_data[1]
             user_id = parsed_callback_data[2]
-            
+
             await register_plus_one(update, context, chat_id, user_id)
 
         # Call the corresponding function

@@ -34,6 +34,14 @@ async def ban(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await context.bot.set_message_reaction(chat_id=chat_id, message_id=message_id, reaction="👌")
 
+async def ban_func(chat_id, user_id):
+    current_match = get_current_match(chat_id)
+    datetime_parsed = datetime.strptime(current_match['datetime'], DATETIME_FORMAT)
+
+    ten_days = timedelta(days=10)
+    banned_until = datetime_parsed + ten_days
+    create_ban(user_id, banned_until)
+
 async def unban(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await is_chat_admin(update, context):
         return
@@ -57,7 +65,7 @@ async def unban(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def get_my_bans(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     chat_id = update.effective_chat.id
-    
+
     user = get_user(user_id)
 
     bans = get_players_ban(user)
