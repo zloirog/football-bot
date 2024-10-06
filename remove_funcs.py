@@ -4,6 +4,7 @@ from telegram.ext import ContextTypes
 from constants import DATETIME_FORMAT
 from date_utils import get_hours_until_match
 from operations.bans import create_ban
+from operations.chats import get_chat
 from operations.match_registrations import delete_match_plus_one_registration, delete_match_registration
 from operations.matches import get_current_match
 from operations.users import get_user, get_user_by_nickname
@@ -38,7 +39,7 @@ async def remove_from_dm(update: Update, context: ContextTypes.DEFAULT_TYPE, cha
 async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE, chat_id):
     user_id = update.callback_query.from_user.id
     current_match = get_current_match(chat_id)
-
+    
     hours_difference = get_hours_until_match(current_match['datetime'])
 
     user = get_user(user_id)
@@ -59,40 +60,44 @@ async def remove_other(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await is_chat_admin(update, context):
         return
 
-    chat_id = update.effective_chat.id
-    current_match = get_current_match(chat_id)
+    tg_chat_id = update.effective_chat.id
+    chat = get_chat(tg_chat_id)
+    
+    current_match = get_current_match(chat['id'])
     message_id = update.message.id
 
     if len(context.args) == 1 and context.args[0].startswith('@'):
         user_nickname = context.args[0][1:]
         user = get_user_by_nickname(user_nickname)
         if not user:
-            await context.bot.send_message(chat_id=chat_id, text="This user is not registered in bot.")
+            await context.bot.send_message(chat_id=tg_chat_id, text="This user is not registered in bot.")
     else:
         await update.message.reply_text("No user was provided.")
         return
 
     delete_match_registration(current_match['match_id'], user['user_id'])
 
-    await context.bot.set_message_reaction(chat_id=chat_id, message_id=message_id, reaction="👌")
+    await context.bot.set_message_reaction(chat_id=tg_chat_id, message_id=message_id, reaction="👌")
 
 async def remove_other_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await is_chat_admin(update, context):
         return
 
-    chat_id = update.effective_chat.id
-    current_match = get_current_match(chat_id)
+    tg_chat_id = update.effective_chat.id
+    chat = get_chat(tg_chat_id)
+    
+    current_match = get_current_match(chat['id'])
     message_id = update.message.id
 
     if len(context.args) == 1 and context.args[0].startswith('@'):
         user_nickname = context.args[0][1:]
         user = get_user_by_nickname(user_nickname)
         if not user:
-            await context.bot.send_message(chat_id=chat_id, text="This user is not registered in bot.")
+            await context.bot.send_message(chat_id=tg_chat_id, text="This user is not registered in bot.")
     else:
         await update.message.reply_text("No user was provided.")
         return
 
     delete_match_plus_one_registration(current_match['match_id'], user['user_id'])
 
-    await context.bot.set_message_reaction(chat_id=chat_id, message_id=message_id, reaction="👌")
+    await context.bot.set_message_reaction(chat_id=tg_chat_id, message_id=message_id, reaction="👌")

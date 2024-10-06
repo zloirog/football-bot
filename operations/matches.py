@@ -22,19 +22,15 @@ SELECT om.match_id, om.datetime, mr.user_id, mr.priority, u.nickname, u.name
 FROM OrderedMatches om
 JOIN Match_Registration mr ON om.match_id = mr.match_id
 JOIN Users u ON mr.user_id = u.user_id
-JOIN Chats c ON m.chat_id = c.id
 WHERE om.rn = 2
 ORDER BY mr.priority ASC, mr.registered_at;
                        """, ((chat_id,)))
 
 def get_current_match(chat_id):
     return fetch_one_query("""
-SELECT m.match_id, m.datetime, m.created_at, u.nickname, u.name
+SELECT m.match_id, m.datetime, m.created_at
 FROM Matches m
-JOIN Match_Registration mr ON mr.match_id = m.match_id
-JOIN Users u ON mr.user_id = u.user_id
-JOIN Chats c ON m.chat_id = c.id
-WHERE m.match_id = (SELECT MAX(match_id) FROM Matches m WHERE c.chat_id = ?)
+WHERE m.match_id = (SELECT MAX(match_id) FROM Matches mm WHERE mm.chat_id = ?)
                        """, ((chat_id,)))
 
 
@@ -55,7 +51,6 @@ First14Registrations AS (
 SELECT f14r.user_id
 FROM First14Registrations f14r
 JOIN OrderedMatches om ON f14r.match_id = om.match_id
-JOIN Chats c ON m.chat_id = c.id
 WHERE om.rn = 2
 AND f14r.rn <= 14
 AND f14r.user_id = ?;

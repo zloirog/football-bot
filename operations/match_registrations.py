@@ -45,12 +45,11 @@ SELECT om.match_id, om.datetime, mr.user_id, mr.priority, mr.is_plus, mr.confirm
 FROM OrderedMatches om
 JOIN Match_Registration mr ON om.match_id = mr.match_id
 JOIN Users u ON mr.user_id = u.user_id
-JOIN Chats c ON m.chat_id = c.id
 ORDER BY mr.priority ASC, mr.registered_at;
                        """, ((chat_id,)))
 
 def check_if_user_registered(match_id, user_id):
-    return fetch_one_query("SELECT mr.registration_id, mr.confirmed, u.nickname, u.name FROM Match_Registration mr JOIN Users u ON mr.user_id = u.user_id JOIN Chats c ON m.chat_id = c.id WHERE mr.match_id = ? AND mr.user_id = ?", (match_id, user_id))
+    return fetch_one_query("SELECT mr.registration_id, mr.confirmed, u.nickname, u.name FROM Match_Registration mr JOIN Users u ON mr.user_id = u.user_id WHERE mr.match_id = ? AND mr.user_id = ?", (match_id, user_id))
 
 # Update
 def update_match_registration(registration_id, user_id, registered_by_id, is_plus, priority, match_id):

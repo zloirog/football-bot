@@ -4,6 +4,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, CallbackContext, MessageHandler, filters
 from bans import ban, get_all_bans_command, get_my_bans, unban
 from date_utils import get_next_weekday, get_current_time
+from matches import cancel_match
 from operations.chats import get_all_chats, get_chat, update_chat
 from users import delete_account, get_all_users, register_user
 from utils import refresh_message, show_registration_message, last_match
@@ -12,16 +13,6 @@ from remove_funcs import remove_from_dm, remove_other_plus_one, remove_plus_one,
 from jobs_funcs import get_jobs, start_repeating_job, stop_repeating_job, start
 
 TOKEN = os.getenv("TG_TOKEN")
-
-async def info(update: Update, context: CallbackContext):
-    await update.message.reply_text("""Запись проходит автоматически каждую среду в 12 часов дня.
-- Что бы зарегистрировать своего другана из чата который, например, занят, нужно написать `/register @druzhok` (druzhok надо заменить на ник своего товарища)
-- Твой дружок должен будет в течении следующих трех часов подтвердить запись написав в чат `/confirm` иначе дружок с тобой на футбол не пойдет.
-- `/last_match` покажет кто играл в прошлой игре
-
-Остальное не важно, и почитай регламент в файлах.
-                              """)
-
 
 def initiate(application):
     chats = get_all_chats()
@@ -66,6 +57,7 @@ def main():
     application.add_handler(CommandHandler("unban", unban))
     application.add_handler(CommandHandler("get_my_bans", get_my_bans))
     application.add_handler(CommandHandler("get_all_bans", get_all_bans_command))
+    application.add_handler(CommandHandler("cancel_match", cancel_match))
 
     application.add_handler(CommandHandler(
         "show_registration_message", show_registration_message))

@@ -1,5 +1,6 @@
 from datetime import datetime
 from date_utils import get_hours_until_match
+from operations.chats import get_chat
 from operations.match_registrations import get_current_match_registrations
 from operations.matches import get_current_match, get_last_match
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, ChatMember
@@ -10,6 +11,19 @@ from constants import DATETIME_FORMAT
 from telegram.constants import ParseMode
 
 def get_reply_markup(chat_id):
+    current_match = get_current_match(chat_id)
+    
+    if current_match:    
+        hours_until_match = get_hours_until_match(current_match['datetime'])
+
+        if hours_until_match < 0:
+            keyboard = [
+                [InlineKeyboardButton("Refresh 🔄", callback_data='refreshmessage')],
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            return reply_markup
+        
     keyboard = [
         [InlineKeyboardButton("Register", callback_data='register')],
         [InlineKeyboardButton("Register ➕ 1️⃣", callback_data='registeranother')],
@@ -25,7 +39,7 @@ def get_reply_markup(chat_id):
 def get_message(chat_id):
     current_match = get_current_match(chat_id)
     current_match_registrations = get_current_match_registrations(chat_id)
-
+    
     game_time_frmt = datetime.strptime(current_match['datetime'], DATETIME_FORMAT).strftime("%d.%m.%Y %H:%M")
 
     message = f"Registration is now open! \nMatch time: {game_time_frmt}\n\n"
@@ -95,9 +109,13 @@ async def is_user_in_chat(update, context, chat_id, user_id):
 async def refresh_message(update: Update, context: CallbackContext):
     query = update.callback_query
     chat_id = update.effective_chat.id
+    
+    tg_chat_id = update.effective_chat.id
+    
+    chat_data = get_chat(tg_chat_id)
 
     try:
-        await query.edit_message_text(text=get_message(chat_id), reply_markup=get_reply_markup(chat_id), parse_mode=ParseMode.HTML)
+        await query.edit_message_text(text=get_message(chat_data['id']), reply_markup=get_reply_markup(chat_data['id']), parse_mode=ParseMode.HTML)
         return
     except Exception as error:
         print(error)
@@ -109,15 +127,18 @@ async def show_registration_message(update: Update, context: CallbackContext):
     if not await is_chat_admin(update, context):
         return
 
-    chat_id = update.effective_chat.id
+    tg_chat_id = update.effective_chat.id
+    chat_data = get_chat(tg_chat_id)
 
-    await context.bot.send_message(chat_id=chat_id, text=get_message(chat_id), reply_markup=get_reply_markup(chat_id), parse_mode=ParseMode.HTML)
+    await context.bot.send_message(chat_id=tg_chat_id, text=get_message(chat_data['id']), reply_markup=get_reply_markup(chat_data['id']), parse_mode=ParseMode.HTML)
 
 
 async def last_match(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
+    tg_chat_id = update.effective_chat.id
+    
+    chat_data = get_chat(tg_chat_id)
 
-    last_match = get_last_match(chat_id)
+    last_match = get_last_match(chat_data['id'])
 
     if len(last_match) == 0:
         return await update.message.reply_text("No last match available", parse_mode=ParseMode.HTML)
