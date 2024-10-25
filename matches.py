@@ -1,6 +1,6 @@
 from telegram.ext import ContextTypes
 from telegram import Update
-from operations.chats import get_chat
+from operations.chats import get_chat_by_tg_id
 from operations.matches import delete_match, get_current_match
 from utils import is_chat_admin
 
@@ -11,7 +11,7 @@ async def cancel_match(update: Update, context: ContextTypes.DEFAULT_TYPE):
     tg_chat_id = update.effective_chat.id
     message_id = update.message.id
     
-    chat_data = get_chat(tg_chat_id)
+    chat_data = get_chat_by_tg_id(tg_chat_id)
     
     current_match = get_current_match(chat_data['id'])
     delete_match(current_match['match_id'])

@@ -1,4 +1,4 @@
-from operations.chats import create_chat, delete_chat, get_chat
+from operations.chats import create_chat, delete_chat, get_chat_by_tg_id
 from operations.matches import create_match
 from utils import get_reply_markup, is_chat_admin
 from date_utils import get_next_weekday, get_current_time
@@ -21,7 +21,7 @@ async def start(context: CallbackContext):
     job_data = context.job.data
     tg_chat_id = job_data['chat_id']
 
-    chat_data = get_chat(tg_chat_id)
+    chat_data = get_chat_by_tg_id(tg_chat_id)
 
     next_match_datetime = get_next_weekday(chat_data['game_week_day'], chat_data['game_time'])
     create_match(next_match_datetime, 130, chat_data['id'])

@@ -2,7 +2,7 @@ from datetime import datetime
 import pytz
 from date_utils import get_hours_until_match, get_current_time
 from operations.bans import delete_ban, get_players_ban
-from operations.chats import get_chat
+from operations.chats import get_chat_by_tg_id
 from operations.match_registrations import check_if_user_registered, confirm_user_registration, create_match_registration, delete_match_registration, get_current_match_registrations
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ParseMode
@@ -31,7 +31,7 @@ async def check_for_confimation(context: ContextTypes.DEFAULT_TYPE):
     tg_chat_id = job_data['chat_id']
     user_id = job_data['user_id']
     
-    chat_data = get_chat(tg_chat_id)
+    chat_data = get_chat_by_tg_id(tg_chat_id)
     
     curr_match = get_current_match(chat_data['id'])
 
@@ -116,7 +116,7 @@ async def register_himself(update: Update, context: CallbackContext):
     user_name = update.callback_query.from_user.username
     tg_chat_id = update.effective_chat.id
     
-    chat_data = get_chat(tg_chat_id)
+    chat_data = get_chat_by_tg_id(tg_chat_id)
     user = get_user(user_id)
     
     chat_id = chat_data['id']
@@ -129,7 +129,7 @@ async def register_himself(update: Update, context: CallbackContext):
         
     if res:
         query = update.callback_query
-        await query.edit_message_text(text=get_message(chat_id), reply_markup=get_reply_markup(chat_id), parse_mode=ParseMode.HTML)
+        await query.edit_message_text(text=get_message(chat_id), reply_markup=get_reply_markup(tg_chat_id), parse_mode=ParseMode.HTML)
 
     return
 
@@ -137,7 +137,7 @@ async def register_plus_one(update: Update, context: CallbackContext, tg_chat_id
     request_user_id = update.callback_query.from_user.id
     user_name = update.callback_query.from_user.username
     
-    chat_data = get_chat(tg_chat_id)
+    chat_data = get_chat_by_tg_id(tg_chat_id)
     user = get_user(request_user_id)
     current_match = get_current_match(chat_data['id'])
     
@@ -170,7 +170,7 @@ async def register_plus_one(update: Update, context: CallbackContext, tg_chat_id
 
 async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE, tg_chat_id):
     user_id = update.callback_query.from_user.id
-    chat_data = get_chat(tg_chat_id)
+    chat_data = get_chat_by_tg_id(tg_chat_id)
     
     res = get_current_match(chat_data['id'])
     current_match = res

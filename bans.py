@@ -5,7 +5,7 @@ from telegram.ext import ContextTypes
 
 from constants import DATETIME_FORMAT
 from operations.bans import create_ban, delete_ban, get_all_bans, get_players_ban
-from operations.chats import get_chat
+from operations.chats import get_chat_by_tg_id
 from operations.matches import get_current_match
 from operations.users import get_user, get_user_by_nickname
 from utils import is_chat_admin
@@ -17,7 +17,7 @@ async def ban(update: Update, context: ContextTypes.DEFAULT_TYPE):
     tg_chat_id = update.effective_chat.id
     message_id = update.message.id
     
-    chat = get_chat(tg_chat_id)
+    chat = get_chat_by_tg_id(tg_chat_id)
     
 
     if context.args and context.args[0].startswith('@'):

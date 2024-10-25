@@ -5,7 +5,7 @@ from telegram.ext import Application, CallbackQueryHandler, CommandHandler, Call
 from bans import ban, get_all_bans_command, get_my_bans, unban
 from date_utils import get_next_weekday, get_current_time
 from matches import cancel_match
-from operations.chats import get_all_chats, get_chat, update_chat
+from operations.chats import get_all_chats, get_chat_by_tg_id, update_chat
 from users import delete_account, get_all_users, register_user
 from utils import refresh_message, show_registration_message, last_match
 from register_funcs import register_himself, register_another_from_chat, register_plus_one, confirm
@@ -42,7 +42,7 @@ def initiate(application):
 def migchat(bot, update):
     oldchatid = update.message.migrate_from_chat_id
     newchatid = update.message.chat.id
-    old_chat = get_chat(oldchatid)
+    old_chat = get_chat_by_tg_id(oldchatid)
     update_chat(old_chat['id'], newchatid, old_chat['name'], old_chat['game_time'], old_chat['game_week_day'], old_chat['reg_time'], old_chat['reg_week_day'])
 
 # Main function

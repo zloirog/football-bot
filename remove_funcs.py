@@ -4,7 +4,7 @@ from telegram.ext import ContextTypes
 from constants import DATETIME_FORMAT
 from date_utils import get_hours_until_match
 from operations.bans import create_ban
-from operations.chats import get_chat
+from operations.chats import get_chat_by_tg_id
 from operations.match_registrations import delete_match_plus_one_registration, delete_match_registration
 from operations.matches import get_current_match
 from operations.users import get_user, get_user_by_nickname
@@ -61,7 +61,7 @@ async def remove_other(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     tg_chat_id = update.effective_chat.id
-    chat = get_chat(tg_chat_id)
+    chat = get_chat_by_tg_id(tg_chat_id)
 
     current_match = get_current_match(chat['id'])
     message_id = update.message.id
@@ -84,7 +84,7 @@ async def remove_other_plus_one(update: Update, context: ContextTypes.DEFAULT_TY
         return
 
     tg_chat_id = update.effective_chat.id
-    chat = get_chat(tg_chat_id)
+    chat = get_chat_by_tg_id(tg_chat_id)
 
     current_match = get_current_match(chat['id'])
     message_id = update.message.id
