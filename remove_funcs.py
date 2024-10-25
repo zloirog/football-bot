@@ -26,7 +26,7 @@ async def remove_from_dm(update: Update, context: ContextTypes.DEFAULT_TYPE, cha
         banned_until = datetime_parsed + ten_days
         create_ban(user_id, banned_until)
         user = get_user(user_id)
-        await context.bot.send_message(chat_id, text=f"@{user['nickname']} - {user['name']}, you've been banned until {banned_until} for cancelling your registration too close to the match.")
+        await context.bot.send_message(chat_id=chat_id, text=f"@{user['nickname']} - {user['name']}, you've been banned until {banned_until} for cancelling your registration too close to the match.")
 
     delete_match_registration(current_match['match_id'], user_id)
 
@@ -39,14 +39,14 @@ async def remove_from_dm(update: Update, context: ContextTypes.DEFAULT_TYPE, cha
 async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE, chat_id):
     user_id = update.callback_query.from_user.id
     current_match = get_current_match(chat_id)
-    
+
     hours_difference = get_hours_until_match(current_match['datetime'])
 
     user = get_user(user_id)
 
     if hours_difference < 22:
         ban_func(chat_id, user_id)
-        await context.bot.send_message(chat_id, text=f"@{user['nickname']} - {user['name']}, your plus one has been banned as it was removed less than 20 hours before the match.")
+        await context.bot.send_message(chat_id=chat_id, text=f"@{user['nickname']} - {user['name']}, your plus one has been banned as it was removed less than 20 hours before the match.")
 
     removed_user_id = delete_match_plus_one_registration(current_match['match_id'], user_id)
 
@@ -62,7 +62,7 @@ async def remove_other(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     tg_chat_id = update.effective_chat.id
     chat = get_chat(tg_chat_id)
-    
+
     current_match = get_current_match(chat['id'])
     message_id = update.message.id
 
@@ -85,7 +85,7 @@ async def remove_other_plus_one(update: Update, context: ContextTypes.DEFAULT_TY
 
     tg_chat_id = update.effective_chat.id
     chat = get_chat(tg_chat_id)
-    
+
     current_match = get_current_match(chat['id'])
     message_id = update.message.id
 

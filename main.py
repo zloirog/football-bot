@@ -38,7 +38,7 @@ def initiate(application):
             data=job_data,
             name=chat['chat_id']
         )
-        
+
 def migchat(bot, update):
     oldchatid = update.message.migrate_from_chat_id
     newchatid = update.message.chat.id
@@ -48,7 +48,7 @@ def migchat(bot, update):
 # Main function
 def main():
     application = Application.builder().token(TOKEN).build()
-    
+
     application.add_handler(MessageHandler(filters.StatusUpdate.MIGRATE, migchat))
 
     application.add_handler(CommandHandler("start_repeating_job", start_repeating_job))
@@ -106,7 +106,7 @@ def main():
 
             keyboard = [
                 [InlineKeyboardButton(
-                    "Yes, confirm quit", callback_data=f'removefromdm_{chat_id}')],
+                    f"Yes, confirm quit", callback_data=f'removefromdm_{chat_id}')],
             ]
             confirm_reply_markup = InlineKeyboardMarkup(keyboard)
             await context.bot.send_message(chat_id=user_id, text="Do you want to quit?", reply_markup=confirm_reply_markup)

@@ -10,10 +10,14 @@ from telegram.error import BadRequest
 from constants import DATETIME_FORMAT
 from telegram.constants import ParseMode
 
-def get_reply_markup(chat_id):
-    current_match = get_current_match(chat_id)
-    
-    if current_match:    
+def get_reply_markup(tg_chat_id):
+    current_match = get_current_match(tg_chat_id)
+
+    chat_data = get_chat(tg_chat_id)
+
+    chat_id = chat_data["id"]
+
+    if current_match:
         hours_until_match = get_hours_until_match(current_match['datetime'])
 
         if hours_until_match < 0:
@@ -23,7 +27,7 @@ def get_reply_markup(chat_id):
             reply_markup = InlineKeyboardMarkup(keyboard)
 
             return reply_markup
-        
+
     keyboard = [
         [InlineKeyboardButton("Register", callback_data='register')],
         [InlineKeyboardButton("Register ➕ 1️⃣", callback_data='registeranother')],
@@ -31,6 +35,7 @@ def get_reply_markup(chat_id):
         [InlineKeyboardButton("Remove ➕ 1️⃣", callback_data=f'removeplusone_{chat_id}')],
         [InlineKeyboardButton("Refresh 🔄", callback_data='refreshmessage')],
     ]
+
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     return reply_markup
@@ -39,7 +44,7 @@ def get_reply_markup(chat_id):
 def get_message(chat_id):
     current_match = get_current_match(chat_id)
     current_match_registrations = get_current_match_registrations(chat_id)
-    
+
     game_time_frmt = datetime.strptime(current_match['datetime'], DATETIME_FORMAT).strftime("%d.%m.%Y %H:%M")
 
     message = f"Registration is now open! \nMatch time: {game_time_frmt}\n\n"
@@ -109,9 +114,9 @@ async def is_user_in_chat(update, context, chat_id, user_id):
 async def refresh_message(update: Update, context: CallbackContext):
     query = update.callback_query
     chat_id = update.effective_chat.id
-    
+
     tg_chat_id = update.effective_chat.id
-    
+
     chat_data = get_chat(tg_chat_id)
 
     try:
@@ -135,7 +140,7 @@ async def show_registration_message(update: Update, context: CallbackContext):
 
 async def last_match(update: Update, context: ContextTypes.DEFAULT_TYPE):
     tg_chat_id = update.effective_chat.id
-    
+
     chat_data = get_chat(tg_chat_id)
 
     last_match = get_last_match(chat_data['id'])
