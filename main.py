@@ -2,10 +2,9 @@ import os
 import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, CallbackContext, MessageHandler, filters
-from bans import ban, get_all_bans_command, get_my_bans, unban
+from bans import ban, ban_forever, get_all_bans_command, get_my_bans, unban
 from date_utils import get_next_weekday, get_current_time
 from matches import cancel_match
-from operations.bans import ban_forever
 from operations.chats import get_all_chats, get_chat_by_tg_id, update_chat
 from users import delete_account, get_all_users, register_user
 from utils import refresh_message, show_registration_message, last_match
