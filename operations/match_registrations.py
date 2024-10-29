@@ -41,12 +41,17 @@ WITH OrderedMatches AS (
     FROM Matches m
     WHERE m.match_id = (SELECT MAX(match_id) FROM Matches m WHERE m.chat_id = ?)
 )
-SELECT om.match_id, om.datetime, mr.user_id, mr.priority, mr.is_plus, mr.confirmed, mr.registration_id, u.nickname, u.name 
+SELECT om.match_id, om.datetime, mr.user_id, mr.priority, mr.is_plus, mr.confirmed, mr.registration_id, u.nickname, u.name, ub.nickname as registered_by_nickname,
 FROM OrderedMatches om
 JOIN Match_Registration mr ON om.match_id = mr.match_id
 JOIN Users u ON mr.user_id = u.user_id
+JOIN Users ub ON mr.registered_by_id = ub.user_id
+                       
 ORDER BY mr.priority ASC, mr.registered_at;
                        """, ((chat_id,)))
+
+def check_if_user_played_before(user_id):
+    return fetch_one_query("SELECT 1 FROM Match_Registration WHERE user_id = ? AND confirmed = 1", (user_id,))
 
 def check_if_user_registered(match_id, user_id):
     return fetch_one_query("SELECT mr.registration_id, mr.confirmed, u.nickname, u.name FROM Match_Registration mr JOIN Users u ON mr.user_id = u.user_id WHERE mr.match_id = ? AND mr.user_id = ?", (match_id, user_id))

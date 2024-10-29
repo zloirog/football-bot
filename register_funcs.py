@@ -3,7 +3,7 @@ import pytz
 from date_utils import get_hours_until_match, get_current_time
 from operations.bans import delete_ban, get_players_ban
 from operations.chats import get_chat_by_tg_id
-from operations.match_registrations import check_if_user_registered, confirm_user_registration, create_match_registration, delete_match_registration, get_current_match_registrations
+from operations.match_registrations import check_if_user_played_before, check_if_user_registered, confirm_user_registration, create_match_registration, delete_match_registration, get_current_match_registrations
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ParseMode
 from telegram.ext import CallbackContext, ContextTypes
@@ -42,7 +42,7 @@ async def check_for_confimation(context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=tg_chat_id, text=f"@{is_user_registered['nickname']} did not confirm their registration!")
         return
 
-def get_priority(user_id, reg_time, game_time, was_in_last_match):
+def get_priority(user_id, reg_time, game_time, was_in_last_match, is_plus):
     now = get_current_time()
     reg_time = pytz.timezone("Europe/Prague").localize(datetime.strptime(reg_time, SQL_DATETIME_FORMAT))
 
@@ -54,6 +54,13 @@ def get_priority(user_id, reg_time, game_time, was_in_last_match):
     hours_difference = get_hours_until_match(game_time)
     if hours_difference < 26:
         return 3
+    
+    if not check_if_user_played_before(user_id):
+        return 3
+    
+    if is_plus:
+        return 3
+    
 
     return 2
 
@@ -106,7 +113,7 @@ def register_core(chat_id, user_id, registered_by_id, is_plus=False, confirmed=T
     if hours_until_match < 0:
         return False
 
-    priority = get_priority(user_id, reg_time, start_time, was_in_last_match_res)
+    priority = get_priority(user_id, reg_time, start_time, was_in_last_match_res, is_plus)
     create_result = create_match_registration(user_id, registered_by_id, is_plus, confirmed, priority, match_id)
 
     return create_result

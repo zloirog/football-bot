@@ -71,7 +71,7 @@ def registered(current_match):
         message += f"{idx + 1}. @{match_registration['nickname']} - {match_registration['name']} <i>(P{match_registration['priority']})</i>"
 
         if match_registration['is_plus']:
-            message += " ➕ 1️⃣"
+            message += f" ➕ 1️⃣ from {match_registration['registered_by_nickname']}"
 
         if not match_registration['confirmed']:
             message += "<i> Not confirmed</i>"
