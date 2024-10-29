@@ -5,6 +5,7 @@ from telegram.ext import Application, CallbackQueryHandler, CommandHandler, Call
 from bans import ban, get_all_bans_command, get_my_bans, unban
 from date_utils import get_next_weekday, get_current_time
 from matches import cancel_match
+from operations.bans import ban_forever
 from operations.chats import get_all_chats, get_chat_by_tg_id, update_chat
 from users import delete_account, get_all_users, register_user
 from utils import refresh_message, show_registration_message, last_match
@@ -55,6 +56,7 @@ def main():
     application.add_handler(CommandHandler("stop", stop_repeating_job))
     application.add_handler(CommandHandler("ban", ban))
     application.add_handler(CommandHandler("unban", unban))
+    application.add_handler(CommandHandler("ban_forever", ban_forever))
     application.add_handler(CommandHandler("get_my_bans", get_my_bans))
     application.add_handler(CommandHandler("get_all_bans", get_all_bans_command))
     application.add_handler(CommandHandler("cancel_match", cancel_match))

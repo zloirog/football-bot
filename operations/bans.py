@@ -5,6 +5,10 @@ def create_ban(user_id, until):
     existing_record = fetch_query("SELECT 1 FROM Bans WHERE user_id = ? AND until = ?", (user_id, until))
     if not existing_record:
         return execute_query("INSERT INTO Bans (user_id, until) VALUES (?, ?)", (user_id, until))
+    
+def ban_forever(user_id):
+    return execute_query("INSERT INTO Bans (user_id, until) VALUES (?, ?)", (user_id, '2099-11-05 09:30:00+02:00'))
+
 
 # Read
 def get_players_ban(user_id):
