@@ -41,12 +41,11 @@ WITH OrderedMatches AS (
     FROM Matches m
     WHERE m.match_id = (SELECT MAX(match_id) FROM Matches m WHERE m.chat_id = ?)
 )
-SELECT om.match_id, om.datetime, mr.user_id, mr.priority, mr.is_plus, mr.confirmed, mr.registration_id, u.nickname, u.name, ub.nickname as registered_by_nickname,
+SELECT om.match_id, om.datetime, mr.user_id, mr.priority, mr.is_plus, mr.confirmed, mr.registration_id, u.nickname, u.name, ub.nickname AS registered_by_nickname
 FROM OrderedMatches om
 JOIN Match_Registration mr ON om.match_id = mr.match_id
 JOIN Users u ON mr.user_id = u.user_id
 JOIN Users ub ON mr.registered_by_id = ub.user_id
-                       
 ORDER BY mr.priority ASC, mr.registered_at;
                        """, ((chat_id,)))
 

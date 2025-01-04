@@ -105,9 +105,11 @@ def main():
             chat_id = parsed_callback_data[1]
             user_id = update.callback_query.from_user.id
 
+            print(action, chat_id, user_id)
+
             keyboard = [
                 [InlineKeyboardButton(
-                    f"Yes, confirm quit", callback_data=f'removefromdm_{chat_id}')],
+                    "Yes, confirm quit", callback_data=f'removefromdm_{chat_id}')],
             ]
             confirm_reply_markup = InlineKeyboardMarkup(keyboard)
             await context.bot.send_message(chat_id=user_id, text="Do you want to quit?", reply_markup=confirm_reply_markup)
