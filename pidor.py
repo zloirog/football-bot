@@ -1,13 +1,20 @@
+import os
 import random
 from datetime import datetime, timedelta
 import pytz
 from telegram import ChatMember, Update
 from telegram.ext import ContextTypes
 from telegram.constants import ParseMode
+from mistralai import Mistral
 
 from operations.common import execute_query, fetch_query, fetch_one_query
 from operations.users import get_user
 from utils import is_chat_admin
+
+API_KEY = os.getenv("MISTRAL_API_KEY")
+mistral = Mistral(API_KEY)
+
+model = 'mistral-small-latest'
 
 # Create table to track random user selections
 def create_random_selection_table():
@@ -119,12 +126,24 @@ async def pick_random_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """, (user_id, tg_chat_id))
         
         times_selected = user_stats['times_selected'] if user_stats else 1
-        
-        await update.message.reply_text(
-            f"🎲 <b>Pidor of the day is selected:</b> @{user['nickname']} ({user['name']})\n"
-            f"This user has been selected {times_selected} time(s) in total.",
-            parse_mode=ParseMode.HTML
+
+        chat_response = mistral.chat.complete(
+            model= model,
+            messages = [
+                {
+                    "role": "user",
+                    "content": "Придумай обидный стишок для пользователя @{user['nickname']} ({user['name']}) на тему того, что он выбран пидором дня. Включи в текст стишка его никнейм с символом @ и имя.",
+                },
+            ]
         )
+
+        await update.message.reply_text(chat_response.choices[0].message.content)
+        
+        # await update.message.reply_text(
+        #     f"🎲 <b>Pidor of the day is selected:</b> @{user['nickname']} ({user['name']})\n"
+        #     f"This user has been selected {times_selected} time(s) in total.",
+        #     parse_mode=ParseMode.HTML
+        # )
     
     except Exception as e:
         await update.message.reply_text(f"Error selecting random user: {str(e)}")

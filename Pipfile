@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 python-dotenv = "*"
 python-telegram-bot = {extras = ["job-queue"], version = "*"}
+mistralai = "*"
 
 [dev-packages]
 
