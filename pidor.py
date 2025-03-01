@@ -73,21 +73,30 @@ async def pick_random_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = get_user(last_selection['user_id'])
         
         await update.message.reply_text(
-            f"A pidor has already been selected today: @{user['nickname']} ({user['name']})\n"
+            f"A user has already been selected today: @{user['nickname']} ({user['name']})\n"
             f"Next selection will be available in {hours} hours and {minutes} minutes.",
             parse_mode=ParseMode.HTML
         )
         return
     
-    # Get all chat members
+    # Get registered users from our database
     try:
+        from operations.users import get_all_users_from_db
+        
+        # Get all registered users
+        all_users = get_all_users_from_db()
         chat_members = []
-        async for member in context.bot.get_chat_members(tg_chat_id):
-            if not member.user.is_bot and member.status != 'LEFT' and member.status != 'KICKED':
-                # Check if the user is registered in our system
-                user = get_user(member.user.id)
-                if user:
+        
+        # For each user, check if they're in the chat
+        for user_record in all_users:
+            try:
+                # Try to get this user's chat member status
+                member = await context.bot.get_chat_member(tg_chat_id, user_record['user_id'])
+                if not member.user.is_bot and member.status not in ['LEFT', 'KICKED']:
                     chat_members.append(member)
+            except Exception as e:
+                # Skip users that aren't in this chat
+                continue
         
         if not chat_members:
             await update.message.reply_text("No registered users found in this chat.")
