@@ -14,7 +14,7 @@ from utils import is_chat_admin
 API_KEY = os.getenv("MISTRAL_API_KEY")
 mistral = Mistral(API_KEY)
 
-model = 'mistral-small-latest'
+model = 'ministral-8b-latest'
 
 # Create table to track random user selections
 def create_random_selection_table():
