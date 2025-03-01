@@ -118,7 +118,7 @@ async def pick_random_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     
     except Exception as e:
-        await update.message.reply_text(f"Error selecting pidor: {str(e)}")
+        await update.message.reply_text(f"Error selecting random user: {str(e)}")
 
 async def get_random_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Make sure we have the random selections table
