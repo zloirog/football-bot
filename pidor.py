@@ -132,7 +132,7 @@ async def pick_random_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
             messages = [
                 {
                     "role": "user",
-                    "content": "Придумай обидный стишок для пользователя @{user['nickname']} ({user['name']}) на тему того, что он выбран пидором дня. Включи в текст стишка его никнейм с символом @ и имя.",
+                    "content": f"Придумай обидный стишок для пользователя @{user['nickname']} ({user['name']}) на тему того, что он выбран пидором дня. Включи в текст стишка его никнейм с символом @ и имя.",
                 },
             ]
         )
