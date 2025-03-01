@@ -19,7 +19,7 @@ async def check_waiting_list_and_notify(context, tg_chat_id, match_id, match_dat
     # If we have more than MAX_PLAYERS registrations, there's a waiting list
     if len(current_match_registrations) > MAX_PLAYERS:
         # The first player in the waiting list is at index MAX_PLAYERS
-        promoted_player = current_match_registrations[MAX_PLAYERS]
+        promoted_player = current_match_registrations[MAX_PLAYERS-1]
         
         # Create a notification message for the promoted player
         message = f"Good news! A spot has opened up for the match at {match_datetime}. You've been moved from the waiting list to the main roster. See you at the game!"
