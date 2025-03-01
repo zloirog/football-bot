@@ -11,6 +11,7 @@ from utils import refresh_message, show_registration_message, last_match
 from register_funcs import register_himself, register_another_from_chat, register_plus_one, confirm
 from remove_funcs import remove_from_dm, remove_other_plus_one, remove_plus_one, remove_other
 from jobs_funcs import get_jobs, start_repeating_job, stop_repeating_job, start
+from pidor import pick_random_user, get_random_stats, clear_random_stats
 
 TOKEN = os.getenv("TG_TOKEN")
 
@@ -74,6 +75,11 @@ def main():
     application.add_handler(CommandHandler("register_me", register_user))
     application.add_handler(CommandHandler("get_all_users", get_all_users))
     application.add_handler(CommandHandler("delete_my_account", delete_account))
+
+    # Add new command handlers for random user selection
+    application.add_handler(CommandHandler("pidor", pick_random_user))
+    application.add_handler(CommandHandler("pidor_stats", get_random_stats))
+    application.add_handler(CommandHandler("clear_random_stats", clear_random_stats))
 
     callback_mapping = {
         'register': register_himself,
