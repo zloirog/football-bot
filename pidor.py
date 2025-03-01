@@ -142,7 +142,7 @@ async def pick_random_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         print(chat_response)
 
-        await update.message.reply_text(remove_text_until_word(chat_response.choices[0].message.content, "[🔓JAILBREAK]"))
+        await update.message.reply_text(remove_text_including_word(chat_response.choices[0].message.content, "[🔓JAILBREAK]"))
         
         # await update.message.reply_text(
         #     f"🎲 <b>Pidor of the day is selected:</b> @{user['nickname']} ({user['name']})\n"
