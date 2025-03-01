@@ -1,7 +1,7 @@
 import random
 from datetime import datetime, timedelta
 import pytz
-from telegram import Update
+from telegram import ChatMember, Update
 from telegram.ext import ContextTypes
 from telegram.constants import ParseMode
 
@@ -92,7 +92,7 @@ async def pick_random_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
             try:
                 # Try to get this user's chat member status
                 member = await context.bot.get_chat_member(tg_chat_id, user_record['user_id'])
-                if not member.user.is_bot and member.status not in ['LEFT', 'KICKED']:
+                if member["status"] in [ChatMember.OWNER, ChatMember.ADMINISTRATOR, ChatMember.MEMBER] and not member.user.is_bot:
                     chat_members.append(member)
             except Exception as e:
                 # Skip users that aren't in this chat
