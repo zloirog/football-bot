@@ -11,15 +11,19 @@ from operations.users import get_user, get_user_by_nickname
 from utils import is_chat_admin
 from bans import ban_func
 
-async def check_waiting_list_and_notify(context, tg_chat_id, match_id, match_datetime):
+async def check_waiting_list_and_notify(context, tg_chat_id, match_id, match_datetime, quitting_player_position=None):
     """Check if there are players in waiting list and notify the first one that they can play"""
     chat_data = get_chat_by_tg_id(tg_chat_id)
     current_match_registrations = get_current_match_registrations(chat_data['id'])
     
+    # If the quitting player was already in the waiting list, don't notify anyone
+    if quitting_player_position is not None and quitting_player_position >= MAX_PLAYERS:
+        return False  # Player was already in waiting list, no need to promote anyone
+    
     # If we have more than MAX_PLAYERS registrations, there's a waiting list
     if len(current_match_registrations) > MAX_PLAYERS:
         # The first player in the waiting list is at index MAX_PLAYERS
-        promoted_player = current_match_registrations[MAX_PLAYERS-1]
+        promoted_player = current_match_registrations[MAX_PLAYERS]
         
         # Create a notification message for the promoted player
         message = f"Good news! A spot has opened up for the match at {match_datetime}. You've been moved from the waiting list to the main roster. See you at the game!"
