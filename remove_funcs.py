@@ -20,6 +20,10 @@ async def check_waiting_list_and_notify(context, tg_chat_id, match_id, match_dat
     if quitting_player_position is not None and quitting_player_position >= MAX_PLAYERS:
         return False  # Player was already in waiting list, no need to promote anyone
     
+    # If quitting player wasn't in the main roster (or we don't know their position), don't notify
+    if quitting_player_position is None or quitting_player_position >= MAX_PLAYERS:
+        return False
+    
     # If we have more than MAX_PLAYERS registrations, there's a waiting list
     if len(current_match_registrations) > MAX_PLAYERS:
         # The first player in the waiting list is at index MAX_PLAYERS
@@ -55,9 +59,18 @@ async def remove_from_dm(update: Update, context: ContextTypes.DEFAULT_TYPE, tg_
     chat_data = get_chat_by_tg_id(tg_chat_id)
 
     current_match = get_current_match(chat_data['id'])
+    
+    # Get current registrations to find player's position before deleting
+    current_match_registrations = get_current_match_registrations(chat_data['id'])
+    
+    # Find the position of the quitting player
+    player_position = None
+    for i, reg in enumerate(current_match_registrations):
+        if reg['user_id'] == user_id:
+            player_position = i
+            break
 
     datetime_parsed = datetime.strptime(current_match['datetime'], DATETIME_FORMAT)
-
     hours_difference = get_hours_until_match(current_match['datetime'])
     
     # First delete the registration
@@ -68,17 +81,21 @@ async def remove_from_dm(update: Update, context: ContextTypes.DEFAULT_TYPE, tg_
         context, 
         tg_chat_id, 
         current_match['match_id'], 
-        current_match['datetime']
+        current_match['datetime'],
+        player_position
     )
     
-    # Only ban if it's too close to the match AND there's no replacement from waiting list
-    if hours_difference < 20 and not has_waiting_list_player:
+    # Only ban if:
+    # 1. It's too close to the match
+    # 2. There's no replacement from waiting list
+    # 3. The player was in the main roster (not in waiting list)
+    if hours_difference < 20 and not has_waiting_list_player and player_position is not None and player_position < MAX_PLAYERS:
         ten_days = timedelta(days=10)
         banned_until = datetime_parsed + ten_days
         create_ban(user_id, banned_until)
         user = get_user(user_id)
         await context.bot.send_message(chat_id=tg_chat_id, text=f"@{user['nickname']} - {user['name']}, you've been banned until {banned_until} for cancelling your registration too close to the match.")
-    elif hours_difference < 20 and has_waiting_list_player:
+    elif hours_difference < 20 and has_waiting_list_player and player_position is not None and player_position < MAX_PLAYERS:
         # Player cancelled with short notice but someone from waiting list can play
         user = get_user(user_id)
         await context.bot.send_message(chat_id=tg_chat_id, text=f"@{user['nickname']} - {user['name']} cancelled with short notice, but a player from the waiting list has been promoted to replace them.")
@@ -94,6 +111,18 @@ async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE, tg
 
     chat_data = get_chat_by_tg_id(tg_chat_id)
     current_match = get_current_match(chat_data['id'])
+    
+    # Get current registrations to find plus one player's position
+    current_match_registrations = get_current_match_registrations(chat_data['id'])
+    
+    # Find the plus one registration to determine its position
+    plus_one_position = None
+    plus_one_user_id = None
+    for i, reg in enumerate(current_match_registrations):
+        if reg['registered_by_id'] == user_id and reg['is_plus'] == 1:
+            plus_one_position = i
+            plus_one_user_id = reg['user_id']
+            break
 
     hours_difference = get_hours_until_match(current_match['datetime'])
 
@@ -107,14 +136,16 @@ async def remove_plus_one(update: Update, context: ContextTypes.DEFAULT_TYPE, tg
         context, 
         tg_chat_id, 
         current_match['match_id'], 
-        current_match['datetime']
+        current_match['datetime'],
+        plus_one_position
     )
     
     # Only ban if it's too close to the match AND there's no replacement from waiting list
-    if hours_difference < 22 and not has_waiting_list_player:
+    # AND the plus one was in the main roster
+    if hours_difference < 22 and not has_waiting_list_player and plus_one_position is not None and plus_one_position < MAX_PLAYERS:
         ban_func(chat_data['id'], user_id)
         await context.bot.send_message(chat_id=tg_chat_id, text=f"@{user['nickname']} - {user['name']}, your plus one has been banned as it was removed less than 20 hours before the match.")
-    elif hours_difference < 22 and has_waiting_list_player:
+    elif hours_difference < 22 and has_waiting_list_player and plus_one_position is not None and plus_one_position < MAX_PLAYERS:
         # Plus one was removed with short notice but someone from waiting list can play
         await context.bot.send_message(chat_id=tg_chat_id, text=f"@{user['nickname']} - {user['name']} removed their plus one with short notice, but a player from the waiting list has been promoted to replace them.")
 
@@ -143,6 +174,16 @@ async def remove_other(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("No user was provided.")
         return
+        
+    # Get current registrations to find player's position before deleting
+    current_match_registrations = get_current_match_registrations(chat['id'])
+    
+    # Find the position of the player to be removed
+    player_position = None
+    for i, reg in enumerate(current_match_registrations):
+        if reg['user_id'] == user['user_id']:
+            player_position = i
+            break
 
     # Delete the registration first
     delete_match_registration(current_match['match_id'], user['user_id'])
@@ -152,7 +193,8 @@ async def remove_other(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context, 
         tg_chat_id, 
         current_match['match_id'], 
-        current_match['datetime']
+        current_match['datetime'],
+        player_position
     )
 
     await context.bot.set_message_reaction(chat_id=tg_chat_id, message_id=message_id, reaction="👌")
