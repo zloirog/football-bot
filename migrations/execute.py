@@ -5,6 +5,9 @@ import os
 DB_PATH = os.getenv("DATABASE_PATH")
 
 def run_sql_file(sql_file):
+    print(DB_PATH)
+    
+    os.listdir("/app/data")
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
