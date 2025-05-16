@@ -1,8 +1,11 @@
 import sqlite3
 import sys
+import os
+
+DB_PATH = os.getenv("DATABASE_PATH")
 
 def run_sql_file(sql_file):
-    conn = sqlite3.connect('football.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     try:
