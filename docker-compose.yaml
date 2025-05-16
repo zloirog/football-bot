@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  football-bot:
+    build: .
+    container_name: football-telegram-bot
+    restart: always
+    environment:
+      - TG_TOKEN=${TG_TOKEN}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - DATABASE_PATH=/app/data/football.db
+    volumes:
+      # Mount your local data directory to container's /app/data
+      - /home/vadimtorosyan/football-bot-data:/app/data
+    networks:
+      - coolify
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  coolify:
+    external: true

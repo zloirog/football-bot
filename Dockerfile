@@ -23,10 +23,6 @@ RUN mkdir -p /app/data
 
 # Create the database and run migrations
 ENV DATABASE_PATH=/app/data/football.db
-RUN sqlite3 $DATABASE_PATH < migrations/create_db.sql && \
-    sqlite3 $DATABASE_PATH < migrations/change_chat_ids.sql && \
-    sqlite3 $DATABASE_PATH < migrations/alter_users.sql && \
-    sqlite3 $DATABASE_PATH < migrations/add_pidor.sql
 
 # Expose port (if needed for health checks)
 EXPOSE 8080
