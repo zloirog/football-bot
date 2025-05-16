@@ -1,7 +1,11 @@
 import sqlite3
 
+import os
+
+DB_PATH = os.getenv("DATABASE_PATH")
+
 def connect_db():
-    conn = sqlite3.connect('football.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
