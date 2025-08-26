@@ -7,7 +7,7 @@ from date_utils import get_next_weekday, get_current_time
 from matches import cancel_match
 from operations.chats import get_all_chats, get_chat_by_tg_id, update_chat
 from users import delete_account, get_all_users, register_user
-from utils import refresh_message, show_registration_message, last_match
+from utils import refresh_message, show_registration_message, last_match, last_5_matches_players
 from register_funcs import register_himself, register_another_from_chat, register_plus_one, confirm
 from remove_funcs import remove_from_dm, remove_other_plus_one, remove_plus_one, remove_other
 from jobs_funcs import get_jobs, start_repeating_job, stop_repeating_job, start
@@ -65,6 +65,7 @@ def main():
         "show_registration_message", show_registration_message))
 
     application.add_handler(CommandHandler("last_match", last_match))
+    application.add_handler(CommandHandler("last_5_matches_players", last_5_matches_players))
     application.add_handler(CommandHandler("remove_other", remove_other))
     application.add_handler(CommandHandler("remove_other_plus_one", remove_other_plus_one))
 

@@ -2,7 +2,7 @@ from datetime import datetime
 from date_utils import get_hours_until_match
 from operations.chats import get_chat_by_tg_id
 from operations.match_registrations import get_current_match_registrations
-from operations.matches import get_current_match, get_last_match
+from operations.matches import get_current_match, get_last_match, get_last_5_matches_with_players
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, ChatMember
 from telegram.ext import ContextTypes, CallbackContext
 from telegram.error import BadRequest
@@ -150,4 +150,69 @@ async def last_match(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         message += f"{idx + 1}. @{player['nickname']} {player['name']}\n"
 
+    await update.message.reply_text(message, parse_mode=ParseMode.HTML)
+
+
+async def last_5_matches_players(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    tg_chat_id = update.effective_chat.id
+    
+    chat_data = get_chat_by_tg_id(tg_chat_id)
+    
+    # Get players from last 5 matches
+    last_5_matches_data = get_last_5_matches_with_players(chat_data['id'])
+    
+    if len(last_5_matches_data) == 0:
+        return await update.message.reply_text("No matches found", parse_mode=ParseMode.HTML)
+    
+    # Get unique players from all matches and filter by current chat members
+    unique_players = {}
+    matches_by_date = {}
+    
+    for match_data in last_5_matches_data:
+        match_date = match_data['datetime']
+        user_id = match_data['user_id']
+        
+        # Group matches by date
+        if match_date not in matches_by_date:
+            matches_by_date[match_date] = []
+        matches_by_date[match_date].append(match_data)
+        
+        # Store unique players
+        if user_id not in unique_players:
+            unique_players[user_id] = {
+                'nickname': match_data['nickname'],
+                'name': match_data['name'],
+                'user_id': user_id
+            }
+    
+    # Filter players who are still in the chat
+    current_chat_players = []
+    for user_id, player_data in unique_players.items():
+        try:
+            # Check if user is still in the chat
+            member = await context.bot.get_chat_member(tg_chat_id, user_id)
+            if member.status in [ChatMember.MEMBER, ChatMember.ADMINISTRATOR, ChatMember.OWNER]:
+                current_chat_players.append(player_data)
+        except Exception:
+            # User is no longer in the chat, skip them
+            continue
+    
+    if len(current_chat_players) == 0:
+        return await update.message.reply_text("No players from the last 5 matches are currently in this chat", parse_mode=ParseMode.HTML)
+    
+    # Create response message
+    message = f"<b>Players from last 5 matches (currently in chat):</b>\n\n"
+    
+    # Add match summary
+    match_dates = sorted(matches_by_date.keys(), reverse=True)
+    message += f"<b>Matches included:</b>\n"
+    for i, match_date in enumerate(match_dates[:5], 1):
+        message += f"{i}. {match_date}\n"
+    message += "\n"
+    
+    # Add players list
+    message += f"<b>Players ({len(current_chat_players)} total):</b>\n"
+    for idx, player in enumerate(sorted(current_chat_players, key=lambda x: x['nickname']), 1):
+        message += f"{idx}. @{player['nickname']} {player['name']}\n"
+    
     await update.message.reply_text(message, parse_mode=ParseMode.HTML)

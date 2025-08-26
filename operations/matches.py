@@ -65,6 +65,22 @@ AND f14r.user_id = ?;
 def update_match(match_id, date, time, amount_per_person, chat_id):
     execute_query("UPDATE Matches SET date = ?, time = ?, amount_per_person = ?, chat_id = ? WHERE match_id = ?", (date, time, amount_per_person, chat_id, match_id))
 
+def get_last_5_matches_with_players(chat_id):
+    return fetch_query("""
+WITH Last5Matches AS (
+    SELECT m.match_id, m.datetime,
+           ROW_NUMBER() OVER (ORDER BY m.datetime DESC) AS rn
+    FROM Matches m
+    WHERE m.chat_id = ?
+)
+SELECT l5m.match_id, l5m.datetime, mr.user_id, mr.priority, u.nickname, u.name
+FROM Last5Matches l5m
+JOIN Match_Registration mr ON l5m.match_id = mr.match_id
+JOIN Users u ON mr.user_id = u.user_id
+WHERE l5m.rn <= 5 AND mr.priority <= 14
+ORDER BY l5m.datetime DESC, mr.priority ASC;
+                       """, (chat_id,))
+
 # Delete
 def delete_match(match_id):
     execute_query("DELETE FROM Matches WHERE match_id = ?", (match_id,))
