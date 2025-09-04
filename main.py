@@ -10,7 +10,7 @@ from users import delete_account, get_all_users, register_user
 from utils import refresh_message, show_registration_message, last_match, last_5_matches_players
 from register_funcs import register_himself, register_another_from_chat, register_plus_one, confirm
 from remove_funcs import remove_from_dm, remove_other_plus_one, remove_plus_one, remove_other
-from jobs_funcs import get_jobs, start_repeating_job, stop_repeating_job, start
+from jobs_funcs import get_jobs, start_repeating_job, stop_repeating_job, start, manual_start_registration
 from pidor import pick_random_user, get_random_stats, clear_random_stats
 
 TOKEN = os.getenv("TG_TOKEN")
@@ -54,6 +54,7 @@ def main():
 
     application.add_handler(CommandHandler("start_repeating_job", start_repeating_job))
     application.add_handler(CommandHandler("stop", stop_repeating_job))
+    application.add_handler(CommandHandler("start_registration", manual_start_registration))
     application.add_handler(CommandHandler("ban", ban))
     application.add_handler(CommandHandler("unban", unban))
     application.add_handler(CommandHandler("ban_forever", ban_forever))

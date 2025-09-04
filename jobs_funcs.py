@@ -91,3 +91,34 @@ async def stop_repeating_job(update: Update, context: CallbackContext):
             return
 
     await update.message.reply_text("No recurrent messages are currently scheduled for this chat.")
+
+async def manual_start_registration(update: Update, context: CallbackContext):
+    """Manually start registration for the current chat"""
+    if not await is_chat_admin(update, context):
+        return
+
+    tg_chat_id = update.effective_chat.id
+    
+    # Check if chat exists in the database
+    chat_data = get_chat_by_tg_id(tg_chat_id)
+    if not chat_data:
+        await update.message.reply_text("This chat is not configured. Please use /start_repeating_job first.")
+        return
+    
+    # Create a mock job data structure similar to what the scheduled job uses
+    job_data = {'chat_id': tg_chat_id}
+    
+    # Create a mock context with the job data
+    class MockJob:
+        def __init__(self, data):
+            self.data = data
+    
+    mock_context = context
+    mock_context.job = MockJob(job_data)
+    
+    try:
+        # Call the start function with the mock context
+        await start(mock_context)
+        await update.message.reply_text("Registration has been manually started!")
+    except Exception as e:
+        await update.message.reply_text(f"Error starting registration: {str(e)}")
