@@ -67,11 +67,16 @@ def update_match(match_id, date, time, amount_per_person, chat_id):
 
 def get_last_5_matches_with_players(chat_id):
     return fetch_query("""
-WITH Last5Matches AS (
-    SELECT m.match_id, m.datetime,
-           ROW_NUMBER() OVER (ORDER BY m.datetime DESC) AS rn
+WITH MatchesWithRegistrations AS (
+    SELECT DISTINCT m.match_id, m.datetime
     FROM Matches m
+    INNER JOIN Match_Registration mr ON m.match_id = mr.match_id
     WHERE m.chat_id = ?
+),
+Last5Matches AS (
+    SELECT match_id, datetime,
+           ROW_NUMBER() OVER (ORDER BY datetime DESC) AS rn
+    FROM MatchesWithRegistrations
 )
 SELECT l5m.match_id, l5m.datetime, mr.user_id, mr.priority, u.nickname, u.name
 FROM Last5Matches l5m
