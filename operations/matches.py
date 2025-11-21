@@ -33,6 +33,14 @@ FROM Matches m
 WHERE m.match_id = (SELECT MAX(match_id) FROM Matches mm WHERE mm.chat_id = ?)
                        """, ((chat_id,)))
 
+def get_match_by_datetime(chat_id, match_datetime):
+    """Get a match by chat_id and datetime. Returns None if not found."""
+    return fetch_one_query("""
+SELECT m.match_id, m.datetime, m.created_at
+FROM Matches m
+WHERE m.chat_id = ? AND m.datetime = ?
+                       """, (chat_id, match_datetime))
+
 
 def was_in_last_match(chat_id, user_id):
     data = fetch_one_query("""

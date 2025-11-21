@@ -1,5 +1,5 @@
 from operations.chats import create_chat, delete_chat, get_chat_by_tg_id
-from operations.matches import create_match
+from operations.matches import create_match, get_match_by_datetime
 from utils import get_reply_markup, is_chat_admin
 from date_utils import get_next_weekday, get_current_time
 from constants import  DATETIME_FORMAT
@@ -105,20 +105,33 @@ async def manual_start_registration(update: Update, context: CallbackContext):
         await update.message.reply_text("This chat is not configured. Please use /start_repeating_job first.")
         return
     
-    # Create a mock job data structure similar to what the scheduled job uses
-    job_data = {'chat_id': tg_chat_id}
+    # Calculate the next match datetime (same as start function does)
+    next_match_datetime = get_next_weekday(chat_data['game_week_day'], chat_data['game_time'])
     
-    # Create a mock context with the job data
-    class MockJob:
-        def __init__(self, data):
-            self.data = data
+    # Check if a match already exists for this datetime
+    existing_match = get_match_by_datetime(chat_data['id'], next_match_datetime)
     
-    mock_context = context
-    mock_context.job = MockJob(job_data)
-    
-    try:
-        # Call the start function with the mock context
-        await start(mock_context)
-        await update.message.reply_text("Registration has been manually started!")
-    except Exception as e:
-        await update.message.reply_text(f"Error starting registration: {str(e)}")
+    if existing_match:
+        # Match already exists, just send the registration message
+        formatted_game_time = next_match_datetime.strftime("%d.%m.%Y %H:%M")
+        sent_message = await context.bot.send_message(chat_id=tg_chat_id, text=f"Registration is now open! \nGame time: {formatted_game_time}", reply_markup=get_reply_markup(tg_chat_id))
+        await context.bot.pin_chat_message(chat_id=tg_chat_id, message_id=sent_message.message_id)
+        await update.message.reply_text("Registration has been manually started! (Using existing match)")
+    else:
+        # No match exists, create one by calling start
+        job_data = {'chat_id': tg_chat_id}
+        
+        # Create a mock context with the job data
+        class MockJob:
+            def __init__(self, data):
+                self.data = data
+        
+        mock_context = context
+        mock_context.job = MockJob(job_data)
+        
+        try:
+            # Call the start function with the mock context
+            await start(mock_context)
+            await update.message.reply_text("Registration has been manually started!")
+        except Exception as e:
+            await update.message.reply_text(f"Error starting registration: {str(e)}")
